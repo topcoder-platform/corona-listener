@@ -1,0 +1,36 @@
+{
+  "name": "tc-corona",
+  "version": "1.0.0",
+  "description": "Project Corona",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "lint": "standard --env mocha",
+    "lint:fix": "standard --env mocha --fix",
+    "test": "mocha test/*.test.js",
+    "cov": "nyc mocha test/*.test.js"
+  },
+  "author": "TCSCODER",
+  "license": "none",
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
+    "standard": "^12.0.1",
+    "supertest": "^3.0.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "config": "^1.21.0",
+    "cors": "^2.7.1",
+    "express": "^4.14.0",
+    "get-parameter-names": "^0.3.0",
+    "joi": "^9.0.4",
+    "lodash": "^4.17.4",
+    "no-kafka": "^3.2.4",
+    "winston": "^2.2.0"
+  },
+  "engines": {
+    "node": "10.x"
+  }
+}
