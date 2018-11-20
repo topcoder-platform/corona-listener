@@ -40,8 +40,8 @@ const dataHandler = (messageSet, topic, partition) => Promise.each(messageSet, (
     return
   }
   return KafkaHandlerService.handle(messageJSON)
-    // commit offset
-    .then(() => consumer.commitOffset({ topic, partition, offset: m.offset }))
+    // commit offset if the message is successfully handled
+    .then((handled) => handled && consumer.commitOffset({ topic, partition, offset: m.offset }))
     .catch((err) => logger.logFullError(err))
 })
 

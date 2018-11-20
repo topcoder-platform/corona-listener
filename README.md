@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-- nodejs https://nodejs.org/en/ (v10)
+- [nodejs](https://nodejs.org/en/) (v10)
 - Kafka (v2)
 
 ## Configuration
@@ -21,12 +21,28 @@ The following parameters can be set in config files or in env variables:
     if not provided, then SSL connection is not used, direct insecure connection is used;
     if provided, it can be either path to private key file or private key content
 - TOPICS: Kafka topics to listen to
+- AUTH0_URL: Auth0 URL, used to get TC M2M token
+- AUTH0_AUDIENCE: Auth0 audience, used to get TC M2M token
+- TOKEN_CACHE_TIME: token cache time, used to get TC M2M token
+- AUTH0_CLIENT_ID: Auth0 client id, used to get TC M2M token
+- AUTH0_CLIENT_SECRET: Auth0 client secret, used to get TC M2M token
+- GET_CHALLENGE_DETAILS_URL: URL to get challenge details
+- GET_USER_DETAILS_URL: URL to get user details
+- GET_USER_DETAILS_BY_HANDLE_URL: URL to get user details by handle
 
 Test config is at `test/testConfig.js`, you don't need to change it.
 The following test parameters can be set in test config files or in env variables:
 
 - WAIT_MS: the time in milliseconds to wait for some processing completion
-- TEST_TOPIC: Kafka test topic
+
+Set the following environment variables so that the app can get TC M2M token (use 'set' insted of 'export' for Windows OS):
+
+```bash
+export AUTH0_CLIENT_ID=8QovDh27SrDu1XSs68m21A1NBP8isvOt
+export AUTH0_CLIENT_SECRET=3QVxxu20QnagdH-McWhVz0WfsQzA1F8taDdGDI4XphgpEYZPcMTF4lX3aeOIeCzh
+export AUTH0_URL=https://topcoder-dev.auth0.com/oauth/token
+export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
+```
 
 ## Local Kafka setup
 
@@ -41,8 +57,11 @@ The following test parameters can be set in test config files or in env variable
   `bin/kafka-server-start.sh config/server.properties`
 - note that the zookeeper server is at localhost:2181, and Kafka server is at localhost:9092
 - use another terminal, go to same directory, create some topics:
-  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test.topic1`
-  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test.topic2`
+  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic challenge.notification.events`
+  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic submission.notification.create`
+  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic submission.notification.update`
+  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic submission.notification.delete`
+  `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic notifications.autopilot.events`
 - verify that the topics are created:
   `bin/kafka-topics.sh --list --zookeeper localhost:2181`,
   it should list out the created topics
@@ -76,18 +95,99 @@ The following test parameters can be set in test config files or in env variable
 - use the Postman collection and environment in docs folder to test sample API
 
 - to do manual verification for Kafka consumer, go to the Kafka folder
-- run Kafka producer and then type a few messages into the console to send to the Kafka server:
-  `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test.topic1`
-  in the console, write some messages, one per line:
-  `{ "topic": "test.topic1", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "key1": "value1" } }`
-  `{ "topic": "test.topic1", "originator": "test-originator", "timestamp": "2018-09-26T00:00:00", "mime-type": "application/json", "payload": { "key2": "value2" } }`
-- watch the app console output, the handled messages should be shown
+- run Kafka producer for topic `challenge.notification.events`:
+  `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic challenge.notification.events`
+
+- input message of user registration to producer:
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "USER_REGISTRATION", "data": { "challengeId": 30049360, "userId": 23124329 } } }`
+- watch the app console output, below is shown:
+
+```bash
+info: It is user registration (unregistration) message.
+info: Challenge name: Code Dev-Env Test
+info: Challenge type: Code
+info: Challenge prizes: 350, 150
+info: User name: F_NAME L_NAME
+info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- input message of add resource to producer:
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "ADD_RESOURCE", "data": { "challengeId": 30049360, "request": { "roleId": 14, "resourceUserId": 23124329, "phaseId": 0, "addNotification": true, "addForumWatch": true, "checkTerm": false, "studio": false } } } }`
+- watch the app console output, below is shown:
+
+```bash
+info: It is add resource message.
+info: Challenge name: Code Dev-Env Test
+info: Challenge type: Code
+info: Challenge prizes: 350, 150
+info: User name: F_NAME L_NAME
+info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- input message of update draft challenge to producer:
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "UPDATE_DRAFT_CHALLENGE", "data": { "id": 30049360, "confidentialityType": null, "technologies": [], "subTrack": null, "name": null, "reviewType": "COMMUNITY", "billingAccountId": 80000632, "milestoneId": 1, "prizes": [10], "projectId": 18693 }, "userId": 22838965 } }`
+- watch the app console output, below is shown:
+
+```bash
+info: It is update draft or activate challenge message.
+info: Challenge name: Code Dev-Env Test
+info: Challenge type: Code
+info: Challenge prizes: 350, 150
+```
+
+- input message of close task to producer:
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "CLOSE_TASK", "data": { "challengeId": 30049360, "userId": 23124329, "winnerId": 22678451 } } }`
+- watch the app console output, below is shown:
+
+```bash
+info: It is close task message.
+info: Challenge name: Code Dev-Env Test
+info: Challenge type: Code
+info: Challenge prizes: 350, 150
+info: User name: F_NAME L_NAME
+info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- input message that can not be handled:
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "OTHER", "data": { "challengeId": 30049360, "userId": 23124329, "winnerId": 22678451 } } }`
+- watch the app console output, below is shown:
+
+```bash
+info: No processor can recognize and handle the message, it will be ignored.
+```
+
 - in the Kafka producer, write some invalid messages:
-  `invalid message`
-  `{ "topic": "test.topic1", "originator": "test-originator", "timestamp": "abc", "mime-type": "application/json", "payload": { "key1": "value1" } }`
-  `{ "topic": "test.topic1", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json" }`
-- watch the app console output, errors shown be shown
+  `invalid message [{`
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "abc", "mime-type": "application/json", "payload": { "key1": "value1" } }`
+  `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json" }`
+- watch the app console output, errors details are shown
 
-## Notes
+- run another Kafka producer for another topic `submission.notification.create`:
+  `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic submission.notification.create`
 
-- though not required, unit test and Postman test for the sample API are provided
+- input message of contest submission to producer:
+  `{ "topic": "submission.notification.create", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "resource": "submission", "id": "slkdf", "type": "Contest Submission", "url": "http://demo.com", "memberId": 23124329, "challengeId": 30049360, "created": "2018-01-02T00:11:22.000Z", "updated": "2018-01-02T00:11:22.000Z", "createdBy": "Amith", "updatedBy": "Amith", "submissionPhaseId": 961198, "fileType": "zip", "isFileSubmission": false } }`
+- watch the app console output, below is shown:
+
+```bash
+info: It is contest submission message.
+info: Challenge name: Code Dev-Env Test
+info: Challenge type: Code
+info: Challenge prizes: 350, 150
+info: User name: F_NAME L_NAME
+info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- run another Kafka producer for another topic `notifications.autopilot.events`:
+  `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic notifications.autopilot.events`
+
+- input message of auto pilot event to producer:
+  `{ "topic": "notifications.autopilot.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "date": "2018-01-02T00:11:22.000Z", "projectId": 30049360, "phaseId": 953326, "phaseTypeName": "Submission", "state": "END", "operator": "22841596" } }`
+- watch the app console output, below is shown:
+
+```bash
+info: It is auto pilot event message.
+info: Challenge name: Code Dev-Env Test
+info: Challenge type: Code
+info: Challenge prizes: 350, 150
+```
