@@ -3,7 +3,6 @@
  */
 const expect = require('chai').expect
 const testHelper = require('./testHelper')
-const testConfig = require('./testConfig')
 const service = require('../src/services/KafkaHandlerService')
 const consumer = require('../src/app').kafkaConsumer
 
@@ -22,19 +21,6 @@ describe('Kafka Consumer Tests', () => {
       // because the Kafka consumer will make the process non-stop
       .then(() => testHelper.wait())
       .then(() => process.exit(0))
-  })
-
-  it('KafkaHandlerService - handle message successfully', (done) => {
-    const testMessage = {
-      topic: testConfig.TEST_TOPIC,
-      originator: 'originator',
-      timestamp: '2018-01-02T00:00:00',
-      'mime-type': 'application/json',
-      payload: { abc: 123 }
-    }
-    service.handle(testMessage)
-      .then(() => done())
-      .catch((e) => done(e))
   })
 
   it('KafkaHandlerService - null message', (done) => {
@@ -79,7 +65,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (missing originator)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
       payload: { abc: 123 }
@@ -94,7 +80,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (invalid originator)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 123,
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
@@ -110,7 +96,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (missing timestamp)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       'mime-type': 'application/json',
       payload: { abc: 123 }
@@ -125,7 +111,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (invalid timestamp)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: 'abc',
       'mime-type': 'application/json',
@@ -141,7 +127,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (missing mime-type)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       payload: { abc: 123 }
@@ -156,7 +142,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (invalid mime-type)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': {},
@@ -172,7 +158,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (null payload)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
@@ -188,7 +174,7 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - invalid message (invalid payload)', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
@@ -202,123 +188,301 @@ describe('Kafka Consumer Tests', () => {
       })
   })
 
-  it('Handle valid Kafka message successfully', (done) => {
+  it('KafkaHandlerService - handle user registration message successfully', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
-      payload: { abc: 123 }
+      payload: {
+        type: 'USER_REGISTRATION',
+        data: {
+          challengeId: 30049360,
+          userId: 23124329
+        }
+      }
     }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the handled message
-      .then(() => testHelper.wait())
-      .then(() => done())
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
       .catch((e) => done(e))
   })
 
-  it('Handle invalid Kafka message (invalid JSON)', (done) => {
-    testHelper.sendKafkaMessage('invalid JSON [] {')
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
-      .catch((e) => done(e))
-  })
-
-  it('Handle invalid Kafka message (wrong topic)', (done) => {
+  it('KafkaHandlerService - handle unmatched message properly', (done) => {
     const testMessage = {
-      topic: 'wrong',
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
-      payload: { abc: 123 }
+      payload: {
+        type: 'other',
+        data: {
+          challengeId: 30049360,
+          userId: 23124329
+        }
+      }
     }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(false)
+        done()
+      })
       .catch((e) => done(e))
   })
 
-  it('Handle invalid Kafka message (invalid originator)', (done) => {
+  it('KafkaHandlerService - handle add resource message successfully', (done) => {
     const testMessage = {
-      topic: testConfig.TEST_TOPIC,
-      originator: ['originator'],
-      timestamp: '2018-01-02T00:00:00',
-      'mime-type': 'application/json',
-      payload: { abc: 123 }
-    }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
-      .catch((e) => done(e))
-  })
-
-  it('Handle invalid Kafka message (invalid timestamp)', (done) => {
-    const testMessage = {
-      topic: testConfig.TEST_TOPIC,
-      originator: 'originator',
-      timestamp: 'abc',
-      'mime-type': 'application/json',
-      payload: { abc: 123 }
-    }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
-      .catch((e) => done(e))
-  })
-
-  it('Handle invalid Kafka message (empty mime-type)', (done) => {
-    const testMessage = {
-      topic: testConfig.TEST_TOPIC,
-      originator: 'originator',
-      timestamp: '2018-01-02T00:00:00',
-      'mime-type': '',
-      payload: { abc: 123 }
-    }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
-      .catch((e) => done(e))
-  })
-
-  it('Handle invalid Kafka message (missing payload)', (done) => {
-    const testMessage = {
-      topic: testConfig.TEST_TOPIC,
-      originator: 'originator',
-      timestamp: '2018-01-02T00:00:00',
-      'mime-type': 'application/json'
-    }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
-      .catch((e) => done(e))
-  })
-
-  it('Handle invalid Kafka message (invalid payload)', (done) => {
-    const testMessage = {
-      topic: testConfig.TEST_TOPIC,
+      topic: 'challenge.notification.events',
       originator: 'originator',
       timestamp: '2018-01-02T00:00:00',
       'mime-type': 'application/json',
-      payload: []
+      payload: {
+        type: 'ADD_RESOURCE',
+        data: {
+          challengeId: 30049360,
+          request: {
+            roleId: 14,
+            resourceUserId: 23124329,
+            phaseId: 0,
+            addNotification: true,
+            addForumWatch: true,
+            checkTerm: false,
+            studio: false
+          }
+        }
+      }
     }
-    testHelper.sendKafkaMessage(JSON.stringify(testMessage))
-      // wait for app handling the message,
-      // check console output to view the error details
-      .then(() => testHelper.wait())
-      .then(() => done())
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
+      .catch((e) => done(e))
+  })
+
+  it('KafkaHandlerService - handle activate challenge message 1 successfully', (done) => {
+    const testMessage = {
+      topic: 'challenge.notification.events',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        type: 'ACTIVATE_CHALLENGE',
+        data: {
+          id: 30049360,
+          confidentialityType: null,
+          technologies: [],
+          subTrack: null,
+          name: null,
+          reviewType: 'COMMUNITY',
+          billingAccountId: 123,
+          milestoneId: 1,
+          detailedRequirements: null,
+          submissionGuidelines: null,
+          registrationStartsAt: '2018-01-02T00:11:22.001Z',
+          registrationEndsAt: '2018-01-02T00:11:22.001Z',
+          checkpointSubmissionStartsAt: null,
+          checkpointSubmissionEndsAt: null,
+          submissionEndsAt: '2018-01-02T00:11:22.001Z',
+          round1Info: null,
+          round2Info: null,
+          platforms: [],
+          numberOfCheckpointPrizes: 0,
+          checkpointPrize: 0,
+          finalDeliverableTypes: null,
+          prizes: [10],
+          projectId: 123,
+          submissionVisibility: false,
+          maxNumOfSubmissions: 0,
+          task: null,
+          assignees: null,
+          failedRegisterUsers: null,
+          copilotFee: null,
+          copilotId: null,
+          codeRepo: null,
+          environment: null,
+          fixedFee: null,
+          percentageFee: null
+        }
+      }
+    }
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
+      .catch((e) => done(e))
+  })
+
+  it('KafkaHandlerService - handle activate challenge message 2 successfully', (done) => {
+    const testMessage = {
+      topic: 'challenge.notification.events',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        type: 'ACTIVATE_CHALLENGE',
+        data: {
+          id: 30049360,
+          confidentialityType: null,
+          technologies: [],
+          subTrack: null,
+          name: 'test name',
+          reviewType: 'COMMUNITY',
+          billingAccountId: 123,
+          milestoneId: 1,
+          detailedRequirements: null,
+          submissionGuidelines: null,
+          registrationStartsAt: '2018-01-02T00:11:22.001Z',
+          registrationEndsAt: '2018-01-02T00:11:22.001Z',
+          checkpointSubmissionStartsAt: null,
+          checkpointSubmissionEndsAt: null,
+          submissionEndsAt: '2018-01-02T00:11:22.001Z',
+          round1Info: null,
+          round2Info: null,
+          platforms: [],
+          numberOfCheckpointPrizes: 0,
+          checkpointPrize: 0,
+          finalDeliverableTypes: 'test type',
+          prizes: [10],
+          projectId: 123,
+          submissionVisibility: false,
+          maxNumOfSubmissions: 0,
+          task: null,
+          assignees: null,
+          failedRegisterUsers: null,
+          copilotFee: null,
+          copilotId: null,
+          codeRepo: null,
+          environment: null,
+          fixedFee: null,
+          percentageFee: null
+        }
+      }
+    }
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
+      .catch((e) => done(e))
+  })
+
+  it('KafkaHandlerService - handle close task message successfully', (done) => {
+    const testMessage = {
+      topic: 'challenge.notification.events',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        type: 'CLOSE_TASK',
+        data: {
+          challengeId: 30049360,
+          userId: 23124329,
+          winnerId: 123
+        }
+      }
+    }
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
+      .catch((e) => done(e))
+  })
+
+  it('KafkaHandlerService - handle close task message (challenge id not found)', (done) => {
+    const testMessage = {
+      topic: 'challenge.notification.events',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        type: 'CLOSE_TASK',
+        data: {
+          challengeId: 912345111111,
+          userId: 23124329,
+          winnerId: 123
+        }
+      }
+    }
+    service.handle(testMessage)
+      .then(() => done(new Error('Exception should be thrown')))
+      .catch(() => done())
+  })
+
+  it('KafkaHandlerService - handle close task message (user id not found)', (done) => {
+    const testMessage = {
+      topic: 'challenge.notification.events',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        type: 'CLOSE_TASK',
+        data: {
+          challengeId: 30049360,
+          userId: 9923124329,
+          winnerId: 123
+        }
+      }
+    }
+    service.handle(testMessage)
+      .then(() => done(new Error('Exception should be thrown')))
+      .catch(() => done())
+  })
+
+  it('KafkaHandlerService - handle contest submission message successfully', (done) => {
+    const testMessage = {
+      topic: 'submission.notification.update',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        resource: 'submission',
+        id: '123lkjsf',
+        type: 'Contest Submission',
+        url: 'http://demo.com/test',
+        memberId: 23124329,
+        challengeId: 30049360,
+        created: '2018-01-02T00:11:22.001Z',
+        updated: '2018-01-02T00:11:22.001Z',
+        createdBy: 'Amith',
+        updatedBy: 'Amith',
+        submissionPhaseId: 1234,
+        fileType: 'zip',
+        isFileSubmission: false
+      }
+    }
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
+      .catch((e) => done(e))
+  })
+
+  it('KafkaHandlerService - handle auto pilot event message successfully', (done) => {
+    const testMessage = {
+      topic: 'notifications.autopilot.events',
+      originator: 'originator',
+      timestamp: '2018-01-02T00:00:00',
+      'mime-type': 'application/json',
+      payload: {
+        date: '2018-03-04T11:22:33.111Z',
+        projectId: 30049360,
+        phaseId: 12,
+        phaseTypeName: 'Submission',
+        state: 'END',
+        operator: '123123'
+      }
+    }
+    service.handle(testMessage)
+      .then((handled) => {
+        expect(handled).to.equal(true)
+        done()
+      })
       .catch((e) => done(e))
   })
 })
