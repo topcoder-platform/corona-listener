@@ -1,0 +1,38 @@
+{
+  "id": "-50412910:1673fc85558:c2b",
+  "result": {
+    "success": true,
+    "status": 200,
+    "metadata": null,
+    "content": [
+      {
+        "id": "23124329",
+        "modifiedBy": null,
+        "modifiedAt": "2018-10-31T11:55:24.000Z",
+        "createdBy": null,
+        "createdAt": "2013-01-15T06:25:53.000Z",
+        "handle": "callmekatootie",
+        "email": "email@domain.com.z",
+        "firstName": "F_NAME",
+        "lastName": "L_NAME",
+        "credential": {
+          "activationCode": "MROT14LJQ3",
+          "resetToken": null,
+          "hasPassword": true
+        },
+        "status": "A",
+        "country": null,
+        "regSource": "home",
+        "utmSource": null,
+        "utmMedium": null,
+        "utmCampaign": null,
+        "roles": null,
+        "ssoLogin": false,
+        "active": true,
+        "profile": null,
+        "emailActive": true
+      }
+    ]
+  },
+  "version": "v3"
+}

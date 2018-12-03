@@ -2,6 +2,7 @@
  * Service for Kafka handler.
  */
 const Joi = require('joi')
+const config = require('config')
 const _ = require('lodash')
 const logger = require('../common/logger')
 const helper = require('../common/helper')
@@ -9,9 +10,10 @@ const helper = require('../common/helper')
 /**
  * Process user registration (unregistration) message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processUserRegistration (message) {
+async function processUserRegistration (message, io) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -29,9 +31,6 @@ async function processUserRegistration (message) {
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
-  logger.info(`Challenge name: ${challengeName}`)
-  logger.info(`Challenge type: ${challengeType}`)
-  logger.info(`Challenge prizes: ${challengePrizes.join(', ')}`)
 
   // get user details
   const user = await helper.getUserDetails(message.payload.data.userId, token)
@@ -39,17 +38,26 @@ async function processUserRegistration (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
-  logger.info(`User name: ${firstName} ${lastName}`)
-  logger.info(`User photo URL: ${photoURL}`)
+  const event = {
+    topic: message.topic,
+    challengeName,
+    challengeType,
+    challengePrizes,
+    firstName,
+    lastName,
+    photoURL
+  }
+  io.emit(config.LOG_EVENT, event)
   return true
 }
 
 /**
  * Process add resource message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processAddResource (message) {
+async function processAddResource (message, io) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -67,9 +75,6 @@ async function processAddResource (message) {
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
-  logger.info(`Challenge name: ${challengeName}`)
-  logger.info(`Challenge type: ${challengeType}`)
-  logger.info(`Challenge prizes: ${challengePrizes.join(', ')}`)
 
   // get user details
   const user = await helper.getUserDetails(message.payload.data.request.resourceUserId, token)
@@ -77,17 +82,26 @@ async function processAddResource (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
-  logger.info(`User name: ${firstName} ${lastName}`)
-  logger.info(`User photo URL: ${photoURL}`)
+  const event = {
+    topic: message.topic,
+    challengeName,
+    challengeType,
+    challengePrizes,
+    firstName,
+    lastName,
+    photoURL
+  }
+  io.emit(config.LOG_EVENT, event)
   return true
 }
 
 /**
  * Process update draft or activate challenge message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processUpdateDraftOrActivateChallenge (message) {
+async function processUpdateDraftOrActivateChallenge (message, io) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -108,18 +122,23 @@ async function processUpdateDraftOrActivateChallenge (message) {
     challengeType = _.get(challenge, 'result.content.challengeType', '')
     challengePrizes = _.get(challenge, 'result.content.prize', [])
   }
-  logger.info(`Challenge name: ${challengeName}`)
-  logger.info(`Challenge type: ${challengeType}`)
-  logger.info(`Challenge prizes: ${challengePrizes.join(', ')}`)
+  const event = {
+    topic: message.topic,
+    challengeName,
+    challengeType,
+    challengePrizes
+  }
+  io.emit(config.LOG_EVENT, event)
   return true
 }
 
 /**
  * Process close task message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processCloseTask (message) {
+async function processCloseTask (message, io) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -137,9 +156,6 @@ async function processCloseTask (message) {
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
-  logger.info(`Challenge name: ${challengeName}`)
-  logger.info(`Challenge type: ${challengeType}`)
-  logger.info(`Challenge prizes: ${challengePrizes.join(', ')}`)
 
   // get user details
   const user = await helper.getUserDetails(message.payload.data.userId, token)
@@ -147,17 +163,26 @@ async function processCloseTask (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
-  logger.info(`User name: ${firstName} ${lastName}`)
-  logger.info(`User photo URL: ${photoURL}`)
+  const event = {
+    topic: message.topic,
+    challengeName,
+    challengeType,
+    challengePrizes,
+    firstName,
+    lastName,
+    photoURL
+  }
+  io.emit(config.LOG_EVENT, event)
   return true
 }
 
 /**
  * Process contest submission message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processContestSubmission (message) {
+async function processContestSubmission (message, io) {
   if (!_.includes(['submission.notification.create', 'submission.notification.update',
     'submission.notification.delete'], message.topic)) {
     return false
@@ -180,9 +205,6 @@ async function processContestSubmission (message) {
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
-  logger.info(`Challenge name: ${challengeName}`)
-  logger.info(`Challenge type: ${challengeType}`)
-  logger.info(`Challenge prizes: ${challengePrizes.join(', ')}`)
 
   // get user details
   const user = await helper.getUserDetails(message.payload.memberId, token)
@@ -190,17 +212,26 @@ async function processContestSubmission (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
-  logger.info(`User name: ${firstName} ${lastName}`)
-  logger.info(`User photo URL: ${photoURL}`)
+  const event = {
+    topic: message.topic,
+    challengeName,
+    challengeType,
+    challengePrizes,
+    firstName,
+    lastName,
+    photoURL
+  }
+  io.emit(config.LOG_EVENT, event)
   return true
 }
 
 /**
  * Process auto pilot event message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processAutoPilotEvent (message) {
+async function processAutoPilotEvent (message, io) {
   if (message.topic !== 'notifications.autopilot.events') {
     return false
   }
@@ -216,26 +247,30 @@ async function processAutoPilotEvent (message) {
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
-  logger.info(`Challenge name: ${challengeName}`)
-  logger.info(`Challenge type: ${challengeType}`)
-  logger.info(`Challenge prizes: ${challengePrizes.join(', ')}`)
-
+  const event = {
+    topic: message.topic,
+    challengeName,
+    challengeType,
+    challengePrizes
+  }
+  io.emit(config.LOG_EVENT, event)
   return true
 }
 
 /**
  * Handle Kafka message. Returns whether the message is successfully handled. If message is not handled, then it is ignored.
  * @param {Object} message the Kafka message in JSON format
+ * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function handle (message) {
+async function handle (message, io) {
   // log message
   logger.info(`Kafka message: ${JSON.stringify(message, null, 4)}`)
   // loop through processors, find one that can handle the message
   const processors = [processUserRegistration, processAddResource, processUpdateDraftOrActivateChallenge,
     processCloseTask, processContestSubmission, processAutoPilotEvent]
   for (let i = 0; i < processors.length; i += 1) {
-    const res = await processors[i](message)
+    const res = await processors[i](message, io)
     if (res) {
       // the message is successfully handled by current processor
       return true
@@ -253,7 +288,8 @@ handle.schema = {
     timestamp: Joi.date().required(),
     'mime-type': Joi.string().required(),
     payload: Joi.object().required()
-  }).required()
+  }).required(),
+  io: Joi.object().required()
 }
 
 // Exports

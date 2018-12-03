@@ -1,0 +1,10 @@
+{
+  "id": "62512f79:166e61f8bf5:-2cbf",
+  "result": {
+    "success": true,
+    "status": 404,
+    "metadata": null,
+    "content": "The challenge does not exists with the id:912345111111"
+  },
+  "version": "v3"
+}

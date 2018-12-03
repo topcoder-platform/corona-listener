@@ -3,3 +3,7 @@ node_modules/
 *.log
 .DS_Store
 .nyc_output
+node_modules
+dist
+.env
+coverage/

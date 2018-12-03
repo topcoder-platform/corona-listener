@@ -1,0 +1,98 @@
+{
+  "id": "-6676c3f2:16739ab4c9e:-7142",
+  "result": {
+    "success": true,
+    "status": 200,
+    "metadata": null,
+    "content": {
+      "maxRating": null,
+      "userId": 23124329,
+      "description": null,
+      "handle": "callmekatootie",
+      "handleLower": "callmekatootie",
+      "status": "ACTIVE",
+      "homeCountryCode": "IND",
+      "competitionCountryCode": "IND",
+      "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg",
+      "tracks": [
+        "DATA_SCIENCE"
+      ],
+      "createdAt": "45010-08-19T23:23Z",
+      "createdBy": "23124329",
+      "updatedAt": "50593-07-16T08:08Z",
+      "updatedBy": "23124329",
+      "country": "India",
+      "memberSince": "2013-01-15T06:25Z",
+      "quote": "",
+      "copilot": true,
+      "ratingSummary": [
+        {
+          "name": "UI Prototypes",
+          "rating": 878,
+          "colorStyle": "color: #999999"
+        },
+        {
+          "name": "Assembly",
+          "rating": 381,
+          "colorStyle": "color: #999999"
+        },
+        {
+          "name": "Algorithm",
+          "rating": 976,
+          "colorStyle": "color: #00A900"
+        }
+      ],
+      "achievements": [
+        {
+          "date": "2015-06-06T00:00:00.000Z",
+          "description": "Show Your Skills iOS Badge"
+        },
+        {
+          "date": "2014-06-19T00:00:00.000Z",
+          "description": "Getting Started"
+        },
+        {
+          "date": "2014-02-04T00:00:00.000Z",
+          "description": "First Rated Algorithm Competition"
+        },
+        {
+          "date": "2014-02-04T00:00:00.000Z",
+          "description": "First Solved Algorithm Problem"
+        },
+        {
+          "date": "2014-01-30T00:00:00.000Z",
+          "description": "One Thousand Forum Posts"
+        },
+        {
+          "date": "2014-01-29T00:00:00.000Z",
+          "description": "First Win"
+        },
+        {
+          "date": "2014-01-21T00:00:00.000Z",
+          "description": "First Passing Submission"
+        },
+        {
+          "date": "2014-01-16T00:00:00.000Z",
+          "description": "First Placement"
+        },
+        {
+          "date": "2013-12-29T00:00:00.000Z",
+          "description": "One Hundred Forum Posts"
+        },
+        {
+          "date": "2013-11-13T00:00:00.000Z",
+          "description": "2013 Topcoder Open Mashathon Finalist"
+        },
+        {
+          "date": "2013-01-22T00:00:00.000Z",
+          "description": "First Forum Post"
+        },
+        {
+          "date": "2013-01-22T00:00:00.000Z",
+          "description": "Five Hundred Forum Posts"
+        }
+      ]
+    }
+  },
+  "version": "v3"
+}

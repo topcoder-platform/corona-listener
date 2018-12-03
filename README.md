@@ -4,6 +4,8 @@
 
 - [nodejs](https://nodejs.org/en/) (v10)
 - Kafka (v2)
+- [socket.io](https://socket.io/)(websocket server)
+- [puppeteer](https://github.com/GoogleChrome/puppeteer)(test ui built by Angular)
 
 ## Configuration
 
@@ -12,6 +14,7 @@ The following parameters can be set in config files or in env variables:
 
 - DISABLE_LOGGING: whether to disable logging
 - LOG_LEVEL: the log level
+- LOG_EVENT: the log event name used by socket.io server
 - PORT: the server port
 - KAFKA_URL: comma separated Kafka hosts
 - KAFKA_CLIENT_CERT: Kafka connection certificate, optional;
@@ -34,8 +37,10 @@ Test config is at `test/testConfig.js`, you don't need to change it.
 The following test parameters can be set in test config files or in env variables:
 
 - WAIT_MS: the time in milliseconds to wait for some processing completion
+- USE_MOCK: flag to use mock requests in tests to avoid server issues with real apis and make tests to run faster
+- TEST_PORT: the server port used in test
 
-Set the following environment variables so that the app can get TC M2M token (use 'set' insted of 'export' for Windows OS):
+Set the following environment variables so that the app can get TC M2M token (use 'set' instead of 'export' for Windows OS):
 
 ```bash
 export AUTH0_CLIENT_ID=8QovDh27SrDu1XSs68m21A1NBP8isvOt
@@ -68,24 +73,30 @@ export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
 
 ## Local deployment
 
+Currently web pages using Angular are under ui folder and npm scripts will download dependencies and build asserts automatically.
+You may change `USE_MOCK` with `true` at `test/testConfig.js` to run tests with mock response to have faster speed or change `USE_MOCK` with `false` to run tests with real api server.
+
 - setup Kafka as above
 - install dependencies `npm i`
 - run code lint check `npm run lint`
 - run code lint fix `npm run lint:fix`
+- run ui code lint check `npm run lint:ui`
 - run tests `npm run test`
-- run tests with coverage `npm run cov`
+- run tests with coverage `npm run cov` and you can check coverage report in `coverage` folder
 - start app `npm start`,
   the app is running at `http://localhost:3000`,
   it also starts Kafka consumer to listen to configured topics
 
 ## Heroku Deployment
 
+You may no need to run `git init` if already git repo.
+
 - git init
 - git add .
 - git commit -m init
 - heroku create
 - heroku config:set KAFKA_URL=... TOPICS=topic1,topic2
-- git push heroku master
+- git push heroku HEAD:master
 
 ## Verification
 
@@ -93,7 +104,7 @@ export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
 - see above for details to run tests
 - start app
 - use the Postman collection and environment in docs folder to test sample API
-
+- open web page using browser that supports websocket for example open `http://localhost:3000/` using latest Chrome
 - to do manual verification for Kafka consumer, go to the Kafka folder
 - run Kafka producer for topic `challenge.notification.events`:
   `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic challenge.notification.events`
@@ -104,11 +115,23 @@ export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
 
 ```bash
 info: It is user registration (unregistration) message.
-info: Challenge name: Code Dev-Env Test
-info: Challenge type: Code
-info: Challenge prizes: 350, 150
-info: User name: F_NAME L_NAME
-info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "challenge.notification.events",
+    "challengeName": "Code Dev-Env Test",
+    "challengeType": "Code",
+    "challengePrizes": [
+        350,
+        150
+    ],
+    "firstName": "F_NAME",
+    "lastName": "L_NAME",
+    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
+}
 ```
 
 - input message of add resource to producer:
@@ -117,11 +140,23 @@ info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
 
 ```bash
 info: It is add resource message.
-info: Challenge name: Code Dev-Env Test
-info: Challenge type: Code
-info: Challenge prizes: 350, 150
-info: User name: F_NAME L_NAME
-info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "challenge.notification.events",
+    "challengeName": "Code Dev-Env Test",
+    "challengeType": "Code",
+    "challengePrizes": [
+        350,
+        150
+    ],
+    "firstName": "F_NAME",
+    "lastName": "L_NAME",
+    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
+}
 ```
 
 - input message of update draft challenge to producer:
@@ -130,9 +165,41 @@ info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
 
 ```bash
 info: It is update draft or activate challenge message.
-info: Challenge name: Code Dev-Env Test
-info: Challenge type: Code
-info: Challenge prizes: 350, 150
+```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "challenge.notification.events",
+    "challengeName": "Code Dev-Env Test",
+    "challengeType": "Code",
+    "challengePrizes": [
+        350,
+        150
+    ]
+}
+```
+
+- input message of active challenge to producer:
+  `{"topic":"challenge.notification.events","originator":"originator","timestamp":"2018-01-02T00:00:00","mime-type":"application/json","payload":{"type":"ACTIVATE_CHALLENGE","data":{"id":30049360,"confidentialityType":null,"technologies":[],"subTrack":null,"name":"test name","reviewType":"COMMUNITY","billingAccountId":123,"milestoneId":1,"detailedRequirements":null,"submissionGuidelines":null,"registrationStartsAt":"2018-01-02T00:11:22.001Z","registrationEndsAt":"2018-01-02T00:11:22.001Z","checkpointSubmissionStartsAt":null,"checkpointSubmissionEndsAt":null,"submissionEndsAt":"2018-01-02T00:11:22.001Z","round1Info":null,"round2Info":null,"platforms":[],"numberOfCheckpointPrizes":0,"checkpointPrize":0,"finalDeliverableTypes":"test type","prizes":[10],"projectId":123,"submissionVisibility":false,"maxNumOfSubmissions":0,"task":null,"assignees":null,"failedRegisterUsers":null,"copilotFee":null,"copilotId":null,"codeRepo":null,"environment":null,"fixedFee":null,"percentageFee":null}}}`
+- watch the app console output, below is shown:
+
+```bash
+info: It is update draft or activate challenge message.
+```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "challenge.notification.events",
+    "challengeName": "test name",
+    "challengeType": "test type",
+    "challengePrizes": [
+        10
+    ]
+}
 ```
 
 - input message of close task to producer:
@@ -141,11 +208,23 @@ info: Challenge prizes: 350, 150
 
 ```bash
 info: It is close task message.
-info: Challenge name: Code Dev-Env Test
-info: Challenge type: Code
-info: Challenge prizes: 350, 150
-info: User name: F_NAME L_NAME
-info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "challenge.notification.events",
+    "challengeName": "Code Dev-Env Test",
+    "challengeType": "Code",
+    "challengePrizes": [
+        350,
+        150
+    ],
+    "firstName": "F_NAME",
+    "lastName": "L_NAME",
+    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
+}
 ```
 
 - input message that can not be handled:
@@ -171,11 +250,23 @@ info: No processor can recognize and handle the message, it will be ignored.
 
 ```bash
 info: It is contest submission message.
-info: Challenge name: Code Dev-Env Test
-info: Challenge type: Code
-info: Challenge prizes: 350, 150
-info: User name: F_NAME L_NAME
-info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
+```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "submission.notification.create",
+    "challengeName": "Code Dev-Env Test",
+    "challengeType": "Code",
+    "challengePrizes": [
+        350,
+        150
+    ],
+    "firstName": "F_NAME",
+    "lastName": "L_NAME",
+    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
+}
 ```
 
 - run another Kafka producer for another topic `notifications.autopilot.events`:
@@ -187,7 +278,23 @@ info: User photo URL: https://www.topcoder.com/i/m/callmekatootie.jpeg
 
 ```bash
 info: It is auto pilot event message.
-info: Challenge name: Code Dev-Env Test
-info: Challenge type: Code
-info: Challenge prizes: 350, 150
 ```
+
+- watch the Chrome console output, below is shown:
+
+```bash
+{
+    "topic": "notifications.autopilot.events",
+    "challengeName": "Code Dev-Env Test",
+    "challengeType": "Code",
+    "challengePrizes": [
+        350,
+        150
+    ]
+}
+```
+
+You can also see logs shown in console of Chrome will render in home page .
+
+Open web pages `http://localhost:3000/` using latest Chrome, and you can click Route1/Route2 tabs and see routes from Angular route module with urls `http://localhost:3000/route1` and `http://localhost:3000/route2` works.
+You can also open API tab to check sample api `http://localhost:3000/api`.

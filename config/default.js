@@ -2,9 +2,10 @@
  * The configuration file.
  */
 module.exports = {
-  DISABLE_LOGGING: process.env.DISABLE_LOGGING ? Boolean(process.env.DISABLE_LOGGING) : false,
+  DISABLE_LOGGING: process.env.DISABLE_LOGGING ? process.env.DISABLE_LOGGING.toLowerCase() === 'true' : false,
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
-  PORT: process.env.PORT || 3000,
+  LOG_EVENT: 'logs', // event name for socket.io to pass the data
+  PORT: (process.env.PORT && parseInt(process.env.PORT)) || 3000,
 
   KAFKA_URL: process.env.KAFKA_URL || 'localhost:9092',
   // below two params are used for secure Kafka connection, they are optional

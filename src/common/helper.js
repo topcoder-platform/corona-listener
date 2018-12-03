@@ -33,10 +33,6 @@ function autoWrapExpress (obj) {
     }
     return obj
   }
-  _.each(obj, (value, key) => {
-    obj[key] = autoWrapExpress(value)
-  })
-  return obj
 }
 
 /**
@@ -60,7 +56,7 @@ async function getChallengeDetails (challengeId, m2mToken) {
   // get M2M token to call TC API if not provided
   const token = m2mToken || await getM2Mtoken()
   const url = config.GET_CHALLENGE_DETAILS_URL.replace('{challengeId}', challengeId)
-  const result = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+  const result = await axios.get(url, { headers: { Authorization: `Bearer ${token}` }, validateStatus: () => true })
   if (result.data.result.status < 200 || result.data.result.status >= 300) {
     throw new Error(`Failed to get challenge details: ${result.data.result.content}`)
   }
@@ -80,7 +76,7 @@ async function getUserDetails (memberId, m2mToken) {
   // get M2M token to call TC API if not provided
   const token = m2mToken || await getM2Mtoken()
   const url = config.GET_USER_DETAILS_URL.replace('{memberId}', memberId)
-  const result = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } })
+  const result = await axios.get(url, { headers: { Authorization: `Bearer ${token}` }, validateStatus: () => true })
   if (result.data.result.status < 200 || result.data.result.status >= 300) {
     throw new Error(`Failed to get user details: ${result.data.result.content}`)
   }
@@ -98,7 +94,8 @@ async function getUserDetailsByHandle (handle) {
   }
   // this is public API
   const url = config.GET_USER_DETAILS_BY_HANDLE_URL.replace('{handle}', handle)
-  const result = await axios.get(url)
+  // use validate status = false otherwise will axios reject directly
+  const result = await axios.get(url, { validateStatus: () => true })
   if (result.data.result.status < 200 || result.data.result.status >= 300) {
     throw new Error(`Failed to get user details by handle: ${result.data.result.content}`)
   }
@@ -106,7 +103,6 @@ async function getUserDetailsByHandle (handle) {
 }
 
 module.exports = {
-  wrapExpress,
   autoWrapExpress,
   getM2Mtoken,
   getChallengeDetails,

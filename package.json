@@ -4,18 +4,24 @@
   "description": "Project Corona",
   "main": "src/app.js",
   "scripts": {
+    "lint:ui": "cd ui && npm run lint",
     "start": "node src/app.js",
-    "lint": "standard --env mocha",
-    "lint:fix": "standard --env mocha --fix",
-    "test": "mocha test/*.test.js",
-    "cov": "nyc mocha test/*.test.js"
+    "lint": "standard",
+    "lint:fix": "standard --fix",
+    "test": " mocha test/*.test.js --exit",
+    "cov": "nyc --reporter=html --reporter=text npm test",
+    "postinstall": "cd ui && npm i && npm run build"
   },
   "author": "TCSCODER",
   "license": "none",
   "devDependencies": {
-    "chai": "^4.1.1",
     "mocha": "^5.2.0",
+    "moxios": "^0.4.0",
     "nyc": "^12.0.2",
+    "proxyquire": "^2.1.0",
+    "puppeteer": "^1.10.0",
+    "should": "^13.2.3",
+    "sinon": "^7.1.1",
     "standard": "^12.0.1",
     "supertest": "^3.0.0"
   },
@@ -24,13 +30,24 @@
     "bluebird": "^3.5.1",
     "config": "^1.21.0",
     "cors": "^2.7.1",
-    "express": "^4.14.0",
+    "express": "^4.16.4",
     "get-parameter-names": "^0.3.0",
-    "tc-core-library-js": "appirio-tech/tc-core-library-js.git#feature/m2mtoken",
     "joi": "^9.0.4",
     "lodash": "^4.17.4",
     "no-kafka": "^3.2.4",
+    "socket.io": "^2.1.1",
+    "tc-core-library-js": "appirio-tech/tc-core-library-js.git#feature/m2mtoken",
     "winston": "^2.2.0"
+  },
+  "standard": {
+    "env": [
+      "mocha"
+    ],
+    "ignore": [
+      "docs/*",
+      "ui/*",
+      "coverage/*"
+    ]
   },
   "engines": {
     "node": "10.x"

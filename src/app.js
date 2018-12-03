@@ -4,6 +4,13 @@
 require('./bootstrap')
 const config = require('config')
 const express = require('express')
+const path = require('path')
+const http = require('http')
+// setup express app
+const app = express()
+app.set('port', config.PORT)
+const server = http.Server(app)
+const io = require('socket.io')(server)
 const _ = require('lodash')
 const cors = require('cors')
 const helper = require('./common/helper')
@@ -39,7 +46,7 @@ const dataHandler = (messageSet, topic, partition) => Promise.each(messageSet, (
     // ignore the message
     return
   }
-  return KafkaHandlerService.handle(messageJSON)
+  return KafkaHandlerService.handle(messageJSON, io)
     // commit offset if the message is successfully handled
     .then((handled) => handled && consumer.commitOffset({ topic, partition, offset: m.offset }))
     .catch((err) => logger.logFullError(err))
@@ -53,10 +60,7 @@ consumer
   }))
   .catch((err) => logger.logFullError(err))
 
-// setup express app
-const app = express()
-app.set('port', config.PORT)
-
+app.use(express.static(path.join(__dirname, '../ui/dist/ui')))
 app.use(cors())
 
 const apiRouter = express.Router()
@@ -78,8 +82,10 @@ _.each(require('./routes'), (verbs, url) => {
   })
 })
 
-app.use('/', apiRouter)
-
+app.use('/api', apiRouter)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../ui/dist/ui/index.html'))
+})
 app.use((req, res) => {
   res.status(404).json({ error: 'route not found' })
 })
@@ -104,12 +110,13 @@ app.use((err, req, res, next) => { // eslint-disable-line
 })
 
 if (!module.parent) {
-  app.listen(app.get('port'), () => {
+  server.listen(app.get('port'), () => {
     logger.info(`Express server listening on port ${app.get('port')}`)
   })
 }
 
 module.exports = {
   kafkaConsumer: consumer,
-  expressApp: app
+  expressApp: server,
+  io
 }
