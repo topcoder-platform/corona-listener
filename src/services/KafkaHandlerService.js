@@ -2,7 +2,6 @@
  * Service for Kafka handler.
  */
 const Joi = require('joi')
-const config = require('config')
 const _ = require('lodash')
 const logger = require('../common/logger')
 const helper = require('../common/helper')
@@ -10,10 +9,9 @@ const helper = require('../common/helper')
 /**
  * Process user registration (unregistration) message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processUserRegistration (message, io) {
+async function processUserRegistration (message) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -45,19 +43,19 @@ async function processUserRegistration (message, io) {
     challengePrizes,
     firstName,
     lastName,
-    photoURL
+    photoURL,
+    createdAt: message.timestamp
   }
-  io.emit(config.LOG_EVENT, event)
+  await helper.cacheEvent(event)
   return true
 }
 
 /**
  * Process add resource message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processAddResource (message, io) {
+async function processAddResource (message) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -89,19 +87,19 @@ async function processAddResource (message, io) {
     challengePrizes,
     firstName,
     lastName,
-    photoURL
+    photoURL,
+    createdAt: message.timestamp
   }
-  io.emit(config.LOG_EVENT, event)
+  await helper.cacheEvent(event)
   return true
 }
 
 /**
  * Process update draft or activate challenge message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processUpdateDraftOrActivateChallenge (message, io) {
+async function processUpdateDraftOrActivateChallenge (message) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -126,19 +124,19 @@ async function processUpdateDraftOrActivateChallenge (message, io) {
     topic: message.topic,
     challengeName,
     challengeType,
-    challengePrizes
+    challengePrizes,
+    createdAt: message.timestamp
   }
-  io.emit(config.LOG_EVENT, event)
+  await helper.cacheEvent(event)
   return true
 }
 
 /**
  * Process close task message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processCloseTask (message, io) {
+async function processCloseTask (message) {
   if (message.topic !== 'challenge.notification.events') {
     return false
   }
@@ -170,19 +168,19 @@ async function processCloseTask (message, io) {
     challengePrizes,
     firstName,
     lastName,
-    photoURL
+    photoURL,
+    createdAt: message.timestamp
   }
-  io.emit(config.LOG_EVENT, event)
+  await helper.cacheEvent(event)
   return true
 }
 
 /**
  * Process contest submission message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processContestSubmission (message, io) {
+async function processContestSubmission (message) {
   if (!_.includes(['submission.notification.create', 'submission.notification.update',
     'submission.notification.delete'], message.topic)) {
     return false
@@ -219,19 +217,19 @@ async function processContestSubmission (message, io) {
     challengePrizes,
     firstName,
     lastName,
-    photoURL
+    photoURL,
+    createdAt: message.timestamp
   }
-  io.emit(config.LOG_EVENT, event)
+  await helper.cacheEvent(event)
   return true
 }
 
 /**
  * Process auto pilot event message. Returns whether the message is successfully handled.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function processAutoPilotEvent (message, io) {
+async function processAutoPilotEvent (message) {
   if (message.topic !== 'notifications.autopilot.events') {
     return false
   }
@@ -251,26 +249,26 @@ async function processAutoPilotEvent (message, io) {
     topic: message.topic,
     challengeName,
     challengeType,
-    challengePrizes
+    challengePrizes,
+    createdAt: message.timestamp
   }
-  io.emit(config.LOG_EVENT, event)
+  await helper.cacheEvent(event)
   return true
 }
 
 /**
  * Handle Kafka message. Returns whether the message is successfully handled. If message is not handled, then it is ignored.
  * @param {Object} message the Kafka message in JSON format
- * @param {Object} io the socket.io server instance
  * @returns {Boolean} whether the message is successfully handled
  */
-async function handle (message, io) {
+async function handle (message) {
   // log message
   logger.info(`Kafka message: ${JSON.stringify(message, null, 4)}`)
   // loop through processors, find one that can handle the message
   const processors = [processUserRegistration, processAddResource, processUpdateDraftOrActivateChallenge,
     processCloseTask, processContestSubmission, processAutoPilotEvent]
   for (let i = 0; i < processors.length; i += 1) {
-    const res = await processors[i](message, io)
+    const res = await processors[i](message)
     if (res) {
       // the message is successfully handled by current processor
       return true
@@ -288,8 +286,7 @@ handle.schema = {
     timestamp: Joi.date().required(),
     'mime-type': Joi.string().required(),
     payload: Joi.object().required()
-  }).required(),
-  io: Joi.object().required()
+  }).required()
 }
 
 // Exports

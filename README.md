@@ -4,8 +4,7 @@
 
 - [nodejs](https://nodejs.org/en/) (v10)
 - Kafka (v2)
-- [socket.io](https://socket.io/)(websocket server)
-- [puppeteer](https://github.com/GoogleChrome/puppeteer)(test ui built by Angular)
+- Redish (v5)
 
 ## Configuration
 
@@ -14,9 +13,8 @@ The following parameters can be set in config files or in env variables:
 
 - DISABLE_LOGGING: whether to disable logging
 - LOG_LEVEL: the log level
-- LOG_EVENT: the log event name used by socket.io server
-- PORT: the server port
 - KAFKA_URL: comma separated Kafka hosts
+- KAFKA_GROUP_ID: the Kafka group id
 - KAFKA_CLIENT_CERT: Kafka connection certificate, optional;
     if not provided, then SSL connection is not used, direct insecure connection is used;
     if provided, it can be either path to certificate file or certificate content
@@ -32,13 +30,17 @@ The following parameters can be set in config files or in env variables:
 - GET_CHALLENGE_DETAILS_URL: URL to get challenge details
 - GET_USER_DETAILS_URL: URL to get user details
 - GET_USER_DETAILS_BY_HANDLE_URL: URL to get user details by handle
+- REDIS_HOST: Redis host
+- REDIS_PORT: Redis port
+- REDIS_EVENT_LIST_KEY: Redis event list key
+- MAX_CACHED_EVENTS: max count of events to cache
+
 
 Test config is at `test/testConfig.js`, you don't need to change it.
 The following test parameters can be set in test config files or in env variables:
 
 - WAIT_MS: the time in milliseconds to wait for some processing completion
 - USE_MOCK: flag to use mock requests in tests to avoid server issues with real apis and make tests to run faster
-- TEST_PORT: the server port used in test
 
 Set the following environment variables so that the app can get TC M2M token (use 'set' instead of 'export' for Windows OS):
 
@@ -71,21 +73,30 @@ export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
   `bin/kafka-topics.sh --list --zookeeper localhost:2181`,
   it should list out the created topics
 
+
+## Redis setup
+
+- below are verified in Mac
+- download Redis from `http://download.redis.io/releases/redis-5.0.3.tar.gz`
+- extract out the content
+- go to extracted folder
+- run `make`
+- go to `src` folder
+- run `./redis-server` to start Redis server
+- in the `src` folder, you may run `./redis-cli` to start a Redis client to interact with the server
+
+
 ## Local deployment
 
-Currently web pages using Angular are under ui folder and npm scripts will download dependencies and build asserts automatically.
-You may change `USE_MOCK` with `true` at `test/testConfig.js` to run tests with mock response to have faster speed or change `USE_MOCK` with `false` to run tests with real api server.
-
 - setup Kafka as above
+- setup Redis as above
 - install dependencies `npm i`
 - run code lint check `npm run lint`
 - run code lint fix `npm run lint:fix`
-- run ui code lint check `npm run lint:ui`
 - run tests `npm run test`
 - run tests with coverage `npm run cov` and you can check coverage report in `coverage` folder
-- start app `npm start`,
-  the app is running at `http://localhost:3000`,
-  it also starts Kafka consumer to listen to configured topics
+- start app `npm start`, it starts Kafka consumer to listen to configured topics
+
 
 ## Heroku Deployment
 
@@ -98,13 +109,13 @@ You may no need to run `git init` if already git repo.
 - heroku config:set KAFKA_URL=... TOPICS=topic1,topic2
 - git push heroku HEAD:master
 
+
 ## Verification
 
 - setup Kafka as above
+- setup Redis as above
 - see above for details to run tests
 - start app
-- use the Postman collection and environment in docs folder to test sample API
-- open web page using browser that supports websocket for example open `http://localhost:3000/` using latest Chrome
 - to do manual verification for Kafka consumer, go to the Kafka folder
 - run Kafka producer for topic `challenge.notification.events`:
   `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic challenge.notification.events`
@@ -117,46 +128,12 @@ You may no need to run `git init` if already git repo.
 info: It is user registration (unregistration) message.
 ```
 
-- watch the Chrome console output, below is shown:
-
-```bash
-{
-    "topic": "challenge.notification.events",
-    "challengeName": "Code Dev-Env Test",
-    "challengeType": "Code",
-    "challengePrizes": [
-        350,
-        150
-    ],
-    "firstName": "F_NAME",
-    "lastName": "L_NAME",
-    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
-}
-```
-
 - input message of add resource to producer:
   `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "ADD_RESOURCE", "data": { "challengeId": 30049360, "request": { "roleId": 14, "resourceUserId": 23124329, "phaseId": 0, "addNotification": true, "addForumWatch": true, "checkTerm": false, "studio": false } } } }`
 - watch the app console output, below is shown:
 
 ```bash
 info: It is add resource message.
-```
-
-- watch the Chrome console output, below is shown:
-
-```bash
-{
-    "topic": "challenge.notification.events",
-    "challengeName": "Code Dev-Env Test",
-    "challengeType": "Code",
-    "challengePrizes": [
-        350,
-        150
-    ],
-    "firstName": "F_NAME",
-    "lastName": "L_NAME",
-    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
-}
 ```
 
 - input message of update draft challenge to producer:
@@ -167,20 +144,6 @@ info: It is add resource message.
 info: It is update draft or activate challenge message.
 ```
 
-- watch the Chrome console output, below is shown:
-
-```bash
-{
-    "topic": "challenge.notification.events",
-    "challengeName": "Code Dev-Env Test",
-    "challengeType": "Code",
-    "challengePrizes": [
-        350,
-        150
-    ]
-}
-```
-
 - input message of active challenge to producer:
   `{"topic":"challenge.notification.events","originator":"originator","timestamp":"2018-01-02T00:00:00","mime-type":"application/json","payload":{"type":"ACTIVATE_CHALLENGE","data":{"id":30049360,"confidentialityType":null,"technologies":[],"subTrack":null,"name":"test name","reviewType":"COMMUNITY","billingAccountId":123,"milestoneId":1,"detailedRequirements":null,"submissionGuidelines":null,"registrationStartsAt":"2018-01-02T00:11:22.001Z","registrationEndsAt":"2018-01-02T00:11:22.001Z","checkpointSubmissionStartsAt":null,"checkpointSubmissionEndsAt":null,"submissionEndsAt":"2018-01-02T00:11:22.001Z","round1Info":null,"round2Info":null,"platforms":[],"numberOfCheckpointPrizes":0,"checkpointPrize":0,"finalDeliverableTypes":"test type","prizes":[10],"projectId":123,"submissionVisibility":false,"maxNumOfSubmissions":0,"task":null,"assignees":null,"failedRegisterUsers":null,"copilotFee":null,"copilotId":null,"codeRepo":null,"environment":null,"fixedFee":null,"percentageFee":null}}}`
 - watch the app console output, below is shown:
@@ -189,42 +152,12 @@ info: It is update draft or activate challenge message.
 info: It is update draft or activate challenge message.
 ```
 
-- watch the Chrome console output, below is shown:
-
-```bash
-{
-    "topic": "challenge.notification.events",
-    "challengeName": "test name",
-    "challengeType": "test type",
-    "challengePrizes": [
-        10
-    ]
-}
-```
-
 - input message of close task to producer:
   `{ "topic": "challenge.notification.events", "originator": "test-originator", "timestamp": "2018-02-16T00:00:00", "mime-type": "application/json", "payload": { "type": "CLOSE_TASK", "data": { "challengeId": 30049360, "userId": 23124329, "winnerId": 22678451 } } }`
 - watch the app console output, below is shown:
 
 ```bash
 info: It is close task message.
-```
-
-- watch the Chrome console output, below is shown:
-
-```bash
-{
-    "topic": "challenge.notification.events",
-    "challengeName": "Code Dev-Env Test",
-    "challengeType": "Code",
-    "challengePrizes": [
-        350,
-        150
-    ],
-    "firstName": "F_NAME",
-    "lastName": "L_NAME",
-    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
-}
 ```
 
 - input message that can not be handled:
@@ -252,23 +185,6 @@ info: No processor can recognize and handle the message, it will be ignored.
 info: It is contest submission message.
 ```
 
-- watch the Chrome console output, below is shown:
-
-```bash
-{
-    "topic": "submission.notification.create",
-    "challengeName": "Code Dev-Env Test",
-    "challengeType": "Code",
-    "challengePrizes": [
-        350,
-        150
-    ],
-    "firstName": "F_NAME",
-    "lastName": "L_NAME",
-    "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
-}
-```
-
 - run another Kafka producer for another topic `notifications.autopilot.events`:
   `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic notifications.autopilot.events`
 
@@ -280,21 +196,19 @@ info: It is contest submission message.
 info: It is auto pilot event message.
 ```
 
-- watch the Chrome console output, below is shown:
+- in the Redis client, you may run command like `LRANGE events 0 9` to view the cached events,
+  this command returns the cached oldest 10 events, note that latest event is stored at the end of list,
+  the events in Redis is like:
 
-```bash
-{
-    "topic": "notifications.autopilot.events",
-    "challengeName": "Code Dev-Env Test",
-    "challengeType": "Code",
-    "challengePrizes": [
-        350,
-        150
-    ]
-}
+```
+127.0.0.1:6379> LRANGE events 0 9
+1) "{\"topic\":\"challenge.notification.events\",\"challengeName\":\"Code Dev-Env Test\",\"challengeType\":\"Code\",\"challengePrizes\":[350,150],\"firstName\":\"F_NAME\",\"lastName\":\"L_NAME\",\"photoURL\":\"https://www.topcoder.com/i/m/callmekatootie.jpeg\",\"createdAt\":\"2018-02-15T16:00:00.000Z\"}"
+2) "{\"topic\":\"challenge.notification.events\",\"challengeName\":\"Code Dev-Env Test\",\"challengeType\":\"Code\",\"challengePrizes\":[350,150],\"firstName\":\"F_NAME\",\"lastName\":\"L_NAME\",\"photoURL\":\"https://www.topcoder.com/i/m/callmekatootie.jpeg\",\"createdAt\":\"2018-02-15T16:00:00.000Z\"}"
 ```
 
-You can also see logs shown in console of Chrome will render in home page .
 
-Open web pages `http://localhost:3000/` using latest Chrome, and you can click Route1/Route2 tabs and see routes from Angular route module with urls `http://localhost:3000/route1` and `http://localhost:3000/route2` works.
-You can also open API tab to check sample api `http://localhost:3000/api`.
+## Notes
+
+- a good enhancement is made, it uses Kafka group consumer instead of simple consumer, so that
+  it can handle Kafka messages raised when the app is down
+

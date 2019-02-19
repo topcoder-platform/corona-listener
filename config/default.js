@@ -4,10 +4,9 @@
 module.exports = {
   DISABLE_LOGGING: process.env.DISABLE_LOGGING ? process.env.DISABLE_LOGGING.toLowerCase() === 'true' : false,
   LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
-  LOG_EVENT: 'logs', // event name for socket.io to pass the data
-  PORT: (process.env.PORT && parseInt(process.env.PORT)) || 3000,
 
   KAFKA_URL: process.env.KAFKA_URL || 'localhost:9092',
+  KAFKA_GROUP_ID: process.env.KAFKA_GROUP_ID || 'corona-listener-group',
   // below two params are used for secure Kafka connection, they are optional
   // for the local Kafka, they are not needed
   KAFKA_CLIENT_CERT: process.env.KAFKA_CLIENT_CERT,
@@ -32,5 +31,10 @@ module.exports = {
   GET_USER_DETAILS_URL: process.env.GET_USER_DETAILS_URL ||
     'https://api.topcoder-dev.com/v3/users?filter=id={memberId}',
   GET_USER_DETAILS_BY_HANDLE_URL: process.env.GET_USER_DETAILS_BY_HANDLE_URL ||
-    'https://api.topcoder-dev.com/v3/members/{handle}'
+    'https://api.topcoder-dev.com/v3/members/{handle}',
+
+  REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
+  REDIS_PORT: process.env.REDIS_PORT || 6379,
+  REDIS_EVENT_LIST_KEY: process.env.REDIS_EVENT_LIST_KEY || 'events',
+  MAX_CACHED_EVENTS: process.env.MAX_CACHED_EVENTS || 10
 }

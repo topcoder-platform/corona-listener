@@ -3,7 +3,6 @@
  */
 const sinon = require('sinon')
 const should = require('should')
-const config = require('config')
 const proxyquire = require('proxyquire').noCallThru()
 const testConfig = require('./testConfig')
 const {
@@ -19,10 +18,10 @@ const {
   installMoxios,
   uninstallMoxios
 } = require('./testHelper')
+
 describe('Kafka Consumer Tests', () => {
   let consumer
   let service
-  let io
   let emitStub
   beforeEach(() => {
     installMoxios()
@@ -48,8 +47,7 @@ describe('Kafka Consumer Tests', () => {
       './services/KafkaHandlerService': service
     })
     consumer = app.kafkaConsumer
-    io = app.io
-    emitStub = sinon.stub(io, 'emit')
+    emitStub = sinon.stub(helper, 'cacheEvent')
     // wait for app setup
     await wait()
   })
@@ -64,57 +62,11 @@ describe('Kafka Consumer Tests', () => {
 
   it('KafkaHandlerService - null message', async () => {
     try {
-      await service.handle(null, io)
+      await service.handle(null)
       throw new Error('should throw error for null message')
     } catch (e) {
       e.isJoi.should.be.true()
       e.message.should.match(/"message" must be an object/)
-    }
-  })
-
-  it('KafkaHandlerService - null io', async () => {
-    const testMessage = {
-      topic: 'challenge.notification.events',
-      originator: 'originator',
-      timestamp: '2018-01-02T00:00:00',
-      'mime-type': 'application/json',
-      payload: {
-        type: 'USER_REGISTRATION',
-        data: {
-          challengeId,
-          userId
-        }
-      }
-    }
-    try {
-      await service.handle(testMessage, null)
-      throw new Error('should throw error for null io')
-    } catch (e) {
-      e.isJoi.should.be.true()
-      e.message.should.match(/"io" must be an object/)
-    }
-  })
-
-  it('KafkaHandlerService - invalid io', async () => {
-    const testMessage = {
-      topic: 'challenge.notification.events',
-      originator: 'originator',
-      timestamp: '2018-01-02T00:00:00',
-      'mime-type': 'application/json',
-      payload: {
-        type: 'USER_REGISTRATION',
-        data: {
-          challengeId,
-          userId
-        }
-      }
-    }
-    try {
-      await service.handle(testMessage, 'string')
-      throw new Error('should throw error for null io')
-    } catch (e) {
-      e.isJoi.should.be.true()
-      e.message.should.match(/"io" must be an object/)
     }
   })
 
@@ -126,7 +78,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (missing topic)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -143,7 +95,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (empty topic)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -159,7 +111,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (missing originator)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -176,7 +128,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (invalid originator)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -192,7 +144,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (missing timestamp)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -209,7 +161,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (invalid timestamp)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -225,7 +177,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (missing mime-type)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -242,7 +194,7 @@ describe('Kafka Consumer Tests', () => {
       payload: { abc: 123 }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (invalid mime-type)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -259,7 +211,7 @@ describe('Kafka Consumer Tests', () => {
       payload: null
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (null payload)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -276,7 +228,7 @@ describe('Kafka Consumer Tests', () => {
       payload: [{ abc: 123 }]
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (invalid payload)')
     } catch (e) {
       e.isJoi.should.be.true()
@@ -298,12 +250,12 @@ describe('Kafka Consumer Tests', () => {
         }
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}.json`))
   })
 
   it('KafkaHandlerService - handle user registration message(invalid challenge id)', async () => {
@@ -321,7 +273,7 @@ describe('Kafka Consumer Tests', () => {
       }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (invalid challenge id)')
     } catch (e) {
       e.message.should.match(/Missing challenge id/)
@@ -343,7 +295,7 @@ describe('Kafka Consumer Tests', () => {
       }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('should throw error for invalid message (invalid user id)')
     } catch (e) {
       e.message.should.match(/Missing user id/)
@@ -364,7 +316,7 @@ describe('Kafka Consumer Tests', () => {
         }
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.false()
     emitStub.calledOnce.should.be.false()
   })
@@ -391,12 +343,12 @@ describe('Kafka Consumer Tests', () => {
         }
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}.json`))
   })
 
   it('KafkaHandlerService - handle activate challenge message 1 successfully', async () => {
@@ -445,12 +397,12 @@ describe('Kafka Consumer Tests', () => {
         }
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}1.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}1.json`))
   })
 
   it('KafkaHandlerService - handle activate challenge message 2 successfully', async () => {
@@ -500,12 +452,12 @@ describe('Kafka Consumer Tests', () => {
       }
     }
 
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}2.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}2.json`))
   })
 
   it('KafkaHandlerService - handle close task message successfully', async () => {
@@ -523,12 +475,12 @@ describe('Kafka Consumer Tests', () => {
         }
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}_${testMessage.payload.type}.json`))
   })
 
   it('KafkaHandlerService - handle close task message (challenge id not found)', async () => {
@@ -547,7 +499,7 @@ describe('Kafka Consumer Tests', () => {
       }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('Exception should be thrown')
     } catch (e) {
       // will throw 404 if challenge by id not found
@@ -571,7 +523,7 @@ describe('Kafka Consumer Tests', () => {
       }
     }
     try {
-      await service.handle(testMessage, io)
+      await service.handle(testMessage)
       throw new Error('Exception should be thrown')
     } catch (e) {
       // will not throw 404 if user by id not found
@@ -601,12 +553,12 @@ describe('Kafka Consumer Tests', () => {
         isFileSubmission: false
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}.json`))
   })
 
   it('KafkaHandlerService - handle contest submission message(invalid payload.type)', async () => {
@@ -631,7 +583,7 @@ describe('Kafka Consumer Tests', () => {
         isFileSubmission: false
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.false()
     emitStub.calledOnce.should.be.false()
   })
@@ -658,7 +610,7 @@ describe('Kafka Consumer Tests', () => {
         isFileSubmission: false
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.false()
     emitStub.calledOnce.should.be.false()
   })
@@ -678,12 +630,12 @@ describe('Kafka Consumer Tests', () => {
         operator: '123123'
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.true()
     emitStub.calledOnce.should.be.true()
-    const [event, log] = emitStub.firstCall.args
-    should.equal(event, config.LOG_EVENT)
-    should.deepEqual(log, require(`./test_files/log_${testMessage.topic}.json`))
+    const [event] = emitStub.firstCall.args
+    delete event.createdAt
+    should.deepEqual(event, require(`./test_files/log_${testMessage.topic}.json`))
   })
 
   it('KafkaHandlerService - handle auto pilot event message(invalid payload.projectId)', async () => {
@@ -701,7 +653,7 @@ describe('Kafka Consumer Tests', () => {
         operator: '123123'
       }
     }
-    const handled = await service.handle(testMessage, io)
+    const handled = await service.handle(testMessage)
     handled.should.be.false()
     emitStub.calledOnce.should.be.false()
   })
@@ -722,7 +674,7 @@ describe('Kafka Consumer Tests', () => {
         }
       }
       try {
-        await service.handle(testMessage, io)
+        await service.handle(testMessage)
         throw new Error('should throw error for invalid message (invalid challenge)')
       } catch (e) {
         e.message.should.match(/Failed to get challenge details/)
@@ -744,7 +696,7 @@ describe('Kafka Consumer Tests', () => {
         }
       }
       try {
-        await service.handle(testMessage, io)
+        await service.handle(testMessage)
         throw new Error('should throw error for invalid message (invalid user)')
       } catch (e) {
         e.message.should.match(/Failed to get user details/)
@@ -766,7 +718,7 @@ describe('Kafka Consumer Tests', () => {
         }
       }
       try {
-        await service.handle(testMessage, io)
+        await service.handle(testMessage)
         throw new Error('should throw error for invalid message (invalid user handle)')
       } catch (e) {
         e.message.should.match(/Failed to get user details by handle/)

@@ -6,34 +6,12 @@ const config = require('config')
 const m2mAuth = require('tc-core-library-js').auth.m2m
 const m2m = m2mAuth(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME']))
 const axios = require('axios')
+const Redis = require('ioredis')
 
-/**
- * Wrap async function to standard express function
- * @param {Function} fn the async function
- * @returns {Function} the wrapped function
- */
-function wrapExpress (fn) {
-  return function (req, res, next) {
-    fn(req, res, next).catch(next)
-  }
-}
-
-/**
- * Wrap all functions from object
- * @param obj the object (controller exports)
- * @returns {Object|Array} the wrapped object
- */
-function autoWrapExpress (obj) {
-  if (_.isArray(obj)) {
-    return obj.map(autoWrapExpress)
-  }
-  if (_.isFunction(obj)) {
-    if (obj.constructor.name === 'AsyncFunction') {
-      return wrapExpress(obj)
-    }
-    return obj
-  }
-}
+const redis = new Redis({
+  host: config.REDIS_HOST,
+  port: Number(config.REDIS_PORT)
+})
 
 /**
  * Function to get M2M token
@@ -102,10 +80,23 @@ async function getUserDetailsByHandle (handle) {
   return result.data
 }
 
+/**
+ * Cache event in Redis.
+ * @param {Object} event the event to cache
+ */
+async function cacheEvent (event) {
+  const s = JSON.stringify(event)
+  const result = await redis.rpush(config.REDIS_EVENT_LIST_KEY, s)
+  if (result > Number(config.MAX_CACHED_EVENTS)) {
+    // more than max count, remove the oldest one
+    await redis.lpop(config.REDIS_EVENT_LIST_KEY)
+  }
+}
+
 module.exports = {
-  autoWrapExpress,
   getM2Mtoken,
   getChallengeDetails,
   getUserDetails,
-  getUserDetailsByHandle
+  getUserDetailsByHandle,
+  cacheEvent
 }
