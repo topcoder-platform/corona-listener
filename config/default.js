@@ -33,8 +33,7 @@ module.exports = {
   GET_USER_DETAILS_BY_HANDLE_URL: process.env.GET_USER_DETAILS_BY_HANDLE_URL ||
     'https://api.topcoder-dev.com/v3/members/{handle}',
 
-  REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
-  REDIS_PORT: process.env.REDIS_PORT || 6379,
+  REDIS_CONNECTION: process.env.REDIS_CONNECTION,
   REDIS_EVENT_LIST_KEY: process.env.REDIS_EVENT_LIST_KEY || 'events',
   MAX_CACHED_EVENTS: process.env.MAX_CACHED_EVENTS || 10
 }

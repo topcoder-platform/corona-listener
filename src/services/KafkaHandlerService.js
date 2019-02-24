@@ -36,6 +36,8 @@ async function processUserRegistration (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
+  const location = _.get(user2, 'result.content.homeCountryCode')
+  const handle = _.get(user2, 'result.content.handle')
   const event = {
     topic: message.topic,
     challengeName,
@@ -44,7 +46,10 @@ async function processUserRegistration (message) {
     firstName,
     lastName,
     photoURL,
-    createdAt: message.timestamp
+    createdAt: message.timestamp,
+    location,
+    handle,
+    type
   }
   await helper.cacheEvent(event)
   return true
@@ -80,6 +85,8 @@ async function processAddResource (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
+  const location = _.get(user2, 'result.content.homeCountryCode')
+  const handle = _.get(user2, 'result.content.handle')
   const event = {
     topic: message.topic,
     challengeName,
@@ -88,7 +95,10 @@ async function processAddResource (message) {
     firstName,
     lastName,
     photoURL,
-    createdAt: message.timestamp
+    createdAt: message.timestamp,
+    location,
+    handle,
+    type
   }
   await helper.cacheEvent(event)
   return true
@@ -125,7 +135,8 @@ async function processUpdateDraftOrActivateChallenge (message) {
     challengeName,
     challengeType,
     challengePrizes,
-    createdAt: message.timestamp
+    createdAt: message.timestamp,
+    type
   }
   await helper.cacheEvent(event)
   return true
@@ -161,6 +172,8 @@ async function processCloseTask (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
+  const location = _.get(user2, 'result.content.homeCountryCode')
+  const handle = _.get(user2, 'result.content.handle')
   const event = {
     topic: message.topic,
     challengeName,
@@ -169,7 +182,10 @@ async function processCloseTask (message) {
     firstName,
     lastName,
     photoURL,
-    createdAt: message.timestamp
+    createdAt: message.timestamp,
+    location,
+    handle,
+    type
   }
   await helper.cacheEvent(event)
   return true
@@ -210,6 +226,8 @@ async function processContestSubmission (message) {
   const firstName = _.get(user, 'result.content[0].firstName', '')
   const lastName = _.get(user, 'result.content[0].lastName', '')
   const photoURL = _.get(user2, 'result.content.photoURL', '')
+  const location = _.get(user2, 'result.content.homeCountryCode')
+  const handle = _.get(user2, 'result.content.handle')
   const event = {
     topic: message.topic,
     challengeName,
@@ -218,7 +236,10 @@ async function processContestSubmission (message) {
     firstName,
     lastName,
     photoURL,
-    createdAt: message.timestamp
+    createdAt: message.timestamp,
+    location,
+    handle,
+    type
   }
   await helper.cacheEvent(event)
   return true
@@ -250,7 +271,9 @@ async function processAutoPilotEvent (message) {
     challengeName,
     challengeType,
     challengePrizes,
-    createdAt: message.timestamp
+    createdAt: message.timestamp,
+    phaseTypeName: message.payload.phaseTypeName,
+    phaseState: message.payload.state
   }
   await helper.cacheEvent(event)
   return true

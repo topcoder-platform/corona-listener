@@ -4,7 +4,7 @@
 
 - [nodejs](https://nodejs.org/en/) (v10)
 - Kafka (v2)
-- Redish (v5)
+- Redis (v5)
 
 ## Configuration
 
@@ -30,8 +30,7 @@ The following parameters can be set in config files or in env variables:
 - GET_CHALLENGE_DETAILS_URL: URL to get challenge details
 - GET_USER_DETAILS_URL: URL to get user details
 - GET_USER_DETAILS_BY_HANDLE_URL: URL to get user details by handle
-- REDIS_HOST: Redis host
-- REDIS_PORT: Redis port
+- REDIS_CONNECTION: Redis connection
 - REDIS_EVENT_LIST_KEY: Redis event list key
 - MAX_CACHED_EVENTS: max count of events to cache
 
@@ -211,4 +210,3 @@ info: It is auto pilot event message.
 
 - a good enhancement is made, it uses Kafka group consumer instead of simple consumer, so that
   it can handle Kafka messages raised when the app is down
-

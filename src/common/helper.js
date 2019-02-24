@@ -8,10 +8,7 @@ const m2m = m2mAuth(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_
 const axios = require('axios')
 const Redis = require('ioredis')
 
-const redis = new Redis({
-  host: config.REDIS_HOST,
-  port: Number(config.REDIS_PORT)
-})
+const redis = new Redis(config.REDIS_CONNECTION)
 
 /**
  * Function to get M2M token
