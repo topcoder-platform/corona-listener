@@ -1,0 +1,6 @@
+{
+  "topic": "challenge.notification.events",
+  "challengeName": "test name",
+  "challengeType": "test type",
+  "challengePrizes": [10]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "-50412910:1673fc85558:1f85",
+  "result": {
+    "success": false,
+    "status": 200,
+    "metadata": null,
+    "content": [
+      {
+        "handle": "invalidHandle"
+      }
+    ]
+  },
+  "version": "v3"
+}

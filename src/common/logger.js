@@ -42,6 +42,9 @@ logger.logFullError = function (err, signature) { // eslint-disable-line
 function _sanitizeObject (obj) {
   try {
     return JSON.parse(JSON.stringify(obj, (name, value) => {
+      if (name === 'io') {
+        return 'socket.io'
+      }
       if (_.isArray(value) && value.length > 30) {
         return 'Array(' + value.length + ')'
       }

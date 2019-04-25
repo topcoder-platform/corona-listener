@@ -1,0 +1,10 @@
+{
+  "id": "-6676c3f2:16739ab4c9e:-7142",
+  "result": {
+    "success": false,
+    "status": 500,
+    "metadata": null,
+    "content": "invalid user handle content"
+  },
+  "version": "v3"
+}

@@ -3,22 +3,19 @@
  */
 require('./bootstrap')
 const config = require('config')
-const express = require('express')
-const _ = require('lodash')
-const cors = require('cors')
-const helper = require('./common/helper')
 const logger = require('./common/logger')
 const Kafka = require('no-kafka')
 const KafkaHandlerService = require('./services/KafkaHandlerService')
+const healthcheck = require('topcoder-healthcheck-dropin')
 
 // start Kafka consumer
 logger.info('Start Kafka consumer.')
 // create consumer
-const options = { connectionString: config.KAFKA_URL }
+const options = { connectionString: config.KAFKA_URL, handlerConcurrency: 1, groupId: config.KAFKA_GROUP_ID }
 if (config.KAFKA_CLIENT_CERT && config.KAFKA_CLIENT_CERT_KEY) {
   options.ssl = { cert: config.KAFKA_CLIENT_CERT, key: config.KAFKA_CLIENT_CERT_KEY }
 }
-const consumer = new Kafka.SimpleConsumer(options)
+const consumer = new Kafka.GroupConsumer(options)
 
 // data handler
 const dataHandler = (messageSet, topic, partition) => Promise.each(messageSet, (m) => {
@@ -40,76 +37,35 @@ const dataHandler = (messageSet, topic, partition) => Promise.each(messageSet, (
     return
   }
   return KafkaHandlerService.handle(messageJSON)
-    // commit offset
-    .then(() => consumer.commitOffset({ topic, partition, offset: m.offset }))
+    // commit offset if the message is successfully handled
+    .then((handled) => handled && consumer.commitOffset({ topic, partition, offset: m.offset }))
     .catch((err) => logger.logFullError(err))
 })
 
-consumer
-  .init()
-  // consume configured topics
-  .then(() => _.each(config.TOPICS, (tp) => {
-    consumer.subscribe(tp, { time: Kafka.LATEST_OFFSET }, dataHandler)
-  }))
-  .catch((err) => logger.logFullError(err))
-
-// setup express app
-const app = express()
-app.set('port', config.PORT)
-
-app.use(cors())
-
-const apiRouter = express.Router()
-
-// load all routes
-_.each(require('./routes'), (verbs, url) => {
-  _.each(verbs, (def, verb) => {
-    const actions = []
-    const method = require('./controllers/' + def.controller)[def.method]
-    if (!method) {
-      throw new Error(def.method + ' is undefined')
-    }
-    actions.push((req, res, next) => {
-      req.signature = `${def.controller}#${def.method}`
-      next()
-    })
-    actions.push(method)
-    apiRouter[verb](url, helper.autoWrapExpress(actions))
-  })
-})
-
-app.use('/', apiRouter)
-
-app.use((req, res) => {
-  res.status(404).json({ error: 'route not found' })
-})
-
-app.use((err, req, res, next) => { // eslint-disable-line
-  logger.logFullError(err, req.signature)
-  let status = err.httpStatus || 500
-  if (err.isJoi) {
-    status = 400
+// check if there is kafka connection alive
+function check () {
+  if (!consumer.client.initialBrokers && !consumer.client.initialBrokers.length) {
+    return false
   }
-  res.status(status)
-  if (err.isJoi) {
-    res.json({
-      error: 'Validation failed',
-      details: err.details
-    })
-  } else {
-    res.json({
-      error: err.message
-    })
-  }
-})
-
-if (!module.parent) {
-  app.listen(app.get('port'), () => {
-    logger.info(`Express server listening on port ${app.get('port')}`)
+  let connected = true
+  consumer.client.initialBrokers.forEach(conn => {
+    logger.debug(`url ${conn.server()} - connected=${conn.connected}`)
+    connected = conn.connected & connected
   })
+  return connected
 }
 
+// init consumer
+consumer
+  .init([{
+    subscriptions: config.TOPICS,
+    handler: dataHandler
+  }])
+  .then(() => {
+    healthcheck.init([check])
+  })
+  .catch((err) => logger.logFullError(err))
+
 module.exports = {
-  kafkaConsumer: consumer,
-  expressApp: app
+  kafkaConsumer: consumer
 }

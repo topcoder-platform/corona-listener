@@ -1,0 +1,12 @@
+{
+  "topic": "submission.notification.update",
+  "challengeName": "Code Dev-Env Test",
+  "challengeType": "Code",
+  "challengePrizes": [
+    350,
+    150
+  ],
+  "firstName": "F_NAME",
+  "lastName": "L_NAME",
+  "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
+}

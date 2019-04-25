@@ -1,0 +1,10 @@
+{
+  "id": "-22af6f6e:166e61f9388:-329b",
+  "result": {
+    "success": false,
+    "status": 500,
+    "metadata": null,
+    "content": "invalid challenge content"
+  },
+ "version": "v3"
+}
