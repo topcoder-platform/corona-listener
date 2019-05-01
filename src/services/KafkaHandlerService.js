@@ -20,15 +20,18 @@ async function processUserRegistration (message) {
     return false
   }
 
+  const challengeId = message.payload.data.challengeId
+
   // matched
   logger.info('It is user registration (unregistration) message.')
   // get m2m token
   const token = await helper.getM2Mtoken()
   // get challenge details
-  const challenge = await helper.getChallengeDetails(message.payload.data.challengeId, token)
+  const challenge = await helper.getChallengeDetails(challengeId, token)
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
   const user = await helper.getUserDetails(message.payload.data.userId, token)
@@ -49,7 +52,9 @@ async function processUserRegistration (message) {
     createdAt: message.timestamp,
     location,
     handle,
-    type
+    type,
+    projectId,
+    challengeId
   }
   await helper.cacheEvent(event)
   return true
@@ -69,15 +74,18 @@ async function processAddResource (message) {
     return false
   }
 
+  const challengeId = message.payload.data.challengeId
+
   // matched
   logger.info('It is add resource message.')
   // get m2m token
   const token = await helper.getM2Mtoken()
   // get challenge details
-  const challenge = await helper.getChallengeDetails(message.payload.data.challengeId, token)
+  const challenge = await helper.getChallengeDetails(challengeId, token)
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
   const user = await helper.getUserDetails(message.payload.data.request.resourceUserId, token)
@@ -98,7 +106,9 @@ async function processAddResource (message) {
     createdAt: message.timestamp,
     location,
     handle,
-    type
+    type,
+    projectId,
+    challengeId
   }
   await helper.cacheEvent(event)
   return true
@@ -118,17 +128,21 @@ async function processUpdateDraftOrActivateChallenge (message) {
     return false
   }
 
+  const challengeId = message.payload.data.id
+
   // matched
   logger.info('It is update draft or activate challenge message.')
   let challengeName = _.get(message, 'payload.data.name')
   let challengeType = _.get(message, 'payload.data.finalDeliverableTypes')
   let challengePrizes = _.get(message, 'payload.data.prizes')
-  if (!challengeName || !challengeType || !challengePrizes || challengePrizes.length === 0) {
+  let projectId = _.get(message, 'payload.data.projectId')
+  if (!challengeName || !challengeType || !challengePrizes || challengePrizes.length === 0 || !projectId) {
     // get challenge details
-    const challenge = await helper.getChallengeDetails(message.payload.data.id)
+    const challenge = await helper.getChallengeDetails(challengeId)
     challengeName = _.get(challenge, 'result.content.challengeName', '')
     challengeType = _.get(challenge, 'result.content.challengeType', '')
     challengePrizes = _.get(challenge, 'result.content.prize', [])
+    projectId = _.get(challenge, 'result.content.projectId')
   }
   const event = {
     topic: message.topic,
@@ -136,7 +150,9 @@ async function processUpdateDraftOrActivateChallenge (message) {
     challengeType,
     challengePrizes,
     createdAt: message.timestamp,
-    type
+    type,
+    projectId,
+    challengeId
   }
   await helper.cacheEvent(event)
   return true
@@ -156,15 +172,18 @@ async function processCloseTask (message) {
     return false
   }
 
+  const challengeId = message.payload.data.challengeId
+
   // matched
   logger.info('It is close task message.')
   // get m2m token
   const token = await helper.getM2Mtoken()
   // get challenge details
-  const challenge = await helper.getChallengeDetails(message.payload.data.challengeId, token)
+  const challenge = await helper.getChallengeDetails(challengeId, token)
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
   const user = await helper.getUserDetails(message.payload.data.userId, token)
@@ -185,7 +204,9 @@ async function processCloseTask (message) {
     createdAt: message.timestamp,
     location,
     handle,
-    type
+    type,
+    projectId,
+    challengeId
   }
   await helper.cacheEvent(event)
   return true
@@ -210,15 +231,18 @@ async function processContestSubmission (message) {
     return false
   }
 
+  const challengeId = message.payload.challengeId
+
   // matched
   logger.info('It is contest submission message.')
   // get m2m token
   const token = await helper.getM2Mtoken()
   // get challenge details
-  const challenge = await helper.getChallengeDetails(message.payload.challengeId, token)
+  const challenge = await helper.getChallengeDetails(challengeId, token)
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
   const user = await helper.getUserDetails(message.payload.memberId, token)
@@ -239,7 +263,9 @@ async function processContestSubmission (message) {
     createdAt: message.timestamp,
     location,
     handle,
-    type
+    type,
+    projectId,
+    challengeId
   }
   await helper.cacheEvent(event)
   return true
@@ -254,18 +280,19 @@ async function processAutoPilotEvent (message) {
   if (message.topic !== 'notifications.autopilot.events') {
     return false
   }
-  const projectId = _.get(message, 'payload.projectId')
-  if (!projectId) {
+  const challengeId = _.get(message, 'payload.projectId')
+  if (!challengeId) {
     return false
   }
 
   // matched
   logger.info('It is auto pilot event message.')
   // get challenge details
-  const challenge = await helper.getChallengeDetails(projectId)
+  const challenge = await helper.getChallengeDetails(challengeId)
   const challengeName = _.get(challenge, 'result.content.challengeName', '')
   const challengeType = _.get(challenge, 'result.content.challengeType', '')
   const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const projectId = _.get(challenge, 'result.content.projectId')
   const event = {
     topic: message.topic,
     challengeName,
@@ -273,7 +300,9 @@ async function processAutoPilotEvent (message) {
     challengePrizes,
     createdAt: message.timestamp,
     phaseTypeName: message.payload.phaseTypeName,
-    phaseState: message.payload.state
+    phaseState: message.payload.state,
+    projectId,
+    challengeId
   }
   await helper.cacheEvent(event)
   return true
