@@ -28,9 +28,9 @@ async function processUserRegistration (message) {
   const token = await helper.getM2Mtoken()
   // get challenge details
   const challenge = await helper.getChallengeDetails(challengeId, token)
-  const challengeName = _.get(challenge, 'result.content.challengeName', '')
-  const challengeType = _.get(challenge, 'result.content.challengeType', '')
-  const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const challengeName = _.get(challenge, 'result.content.challengeTitle', '')
+  const challengeType = _.get(challenge, 'result.content.subTrack', '')
+  const challengePrizes = _.get(challenge, 'result.content.prizes', [])
   const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
@@ -82,9 +82,9 @@ async function processAddResource (message) {
   const token = await helper.getM2Mtoken()
   // get challenge details
   const challenge = await helper.getChallengeDetails(challengeId, token)
-  const challengeName = _.get(challenge, 'result.content.challengeName', '')
-  const challengeType = _.get(challenge, 'result.content.challengeType', '')
-  const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const challengeName = _.get(challenge, 'result.content.challengeTitle', '')
+  const challengeType = _.get(challenge, 'result.content.subTrack', '')
+  const challengePrizes = _.get(challenge, 'result.content.prizes', [])
   const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
@@ -139,9 +139,9 @@ async function processUpdateDraftOrActivateChallenge (message) {
   if (!challengeName || !challengeType || !challengePrizes || challengePrizes.length === 0 || !projectId) {
     // get challenge details
     const challenge = await helper.getChallengeDetails(challengeId)
-    challengeName = _.get(challenge, 'result.content.challengeName', '')
-    challengeType = _.get(challenge, 'result.content.challengeType', '')
-    challengePrizes = _.get(challenge, 'result.content.prize', [])
+    challengeName = _.get(challenge, 'result.content.challengeTitle', '')
+    challengeType = _.get(challenge, 'result.content.subTrack', '')
+    challengePrizes = _.get(challenge, 'result.content.prizes', [])
     projectId = _.get(challenge, 'result.content.projectId')
   }
   const event = {
@@ -180,9 +180,9 @@ async function processCloseTask (message) {
   const token = await helper.getM2Mtoken()
   // get challenge details
   const challenge = await helper.getChallengeDetails(challengeId, token)
-  const challengeName = _.get(challenge, 'result.content.challengeName', '')
-  const challengeType = _.get(challenge, 'result.content.challengeType', '')
-  const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const challengeName = _.get(challenge, 'result.content.challengeTitle', '')
+  const challengeType = _.get(challenge, 'result.content.subTrack', '')
+  const challengePrizes = _.get(challenge, 'result.content.prizes', [])
   const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
@@ -239,9 +239,9 @@ async function processContestSubmission (message) {
   const token = await helper.getM2Mtoken()
   // get challenge details
   const challenge = await helper.getChallengeDetails(challengeId, token)
-  const challengeName = _.get(challenge, 'result.content.challengeName', '')
-  const challengeType = _.get(challenge, 'result.content.challengeType', '')
-  const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const challengeName = _.get(challenge, 'result.content.challengeTitle', '')
+  const challengeType = _.get(challenge, 'result.content.subTrack', '')
+  const challengePrizes = _.get(challenge, 'result.content.prizes', [])
   const projectId = _.get(challenge, 'result.content.projectId')
 
   // get user details
@@ -289,9 +289,9 @@ async function processAutoPilotEvent (message) {
   logger.info('It is auto pilot event message.')
   // get challenge details
   const challenge = await helper.getChallengeDetails(challengeId)
-  const challengeName = _.get(challenge, 'result.content.challengeName', '')
-  const challengeType = _.get(challenge, 'result.content.challengeType', '')
-  const challengePrizes = _.get(challenge, 'result.content.prize', [])
+  const challengeName = _.get(challenge, 'result.content.challengeTitle', '')
+  const challengeType = _.get(challenge, 'result.content.subTrack', '')
+  const challengePrizes = _.get(challenge, 'result.content.prizes', [])
   const projectId = _.get(challenge, 'result.content.projectId')
   const event = {
     topic: message.topic,
