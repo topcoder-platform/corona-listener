@@ -20,12 +20,18 @@ module.exports = {
     'notifications.autopilot.events'
   ],
 
-  AUTH0_URL: process.env.AUTH0_URL,
-  AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || 'https://www.topcoder.com',
-  TOKEN_CACHE_TIME: process.env.TOKEN_CACHE_TIME,
-  AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
-  AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
+  // corona topic to send event result to
+  CORONA_TOPIC: process.env.CORONA_TOPIC || 'corona.saturate.create',
 
+  // Auth0 config params
+  AUTH0_URL: process.env.AUTH0_URL || 'https://topcoder-dev.auth0.com/oauth/token',
+  AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE || 'https://m2m.topcoder-dev.com/',
+  AUTH0_PROXY_SERVER_URL: process.env.AUTH0_PROXY_SERVER_URL,
+  AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID || 'e6oZAxnoFvjdRtjJs1Jt3tquLnNSTs0e',
+  AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET ||
+    'OGCzOnQkhYTQpZM3NI0sD--JJ_EPcm2E7707_k6zX11m223LrRK1-QZL4Pon4y-D',
+
+  // Challenge & User API url
   GET_CHALLENGE_DETAILS_URL: process.env.GET_CHALLENGE_DETAILS_URL ||
     'https://api.topcoder-dev.com/v3/challenges/{challengeId}',
   GET_USER_DETAILS_URL: process.env.GET_USER_DETAILS_URL ||
@@ -33,7 +39,8 @@ module.exports = {
   GET_USER_DETAILS_BY_HANDLE_URL: process.env.GET_USER_DETAILS_BY_HANDLE_URL ||
     'https://api.topcoder-dev.com/v3/members/{handle}',
 
-  REDIS_CONNECTION: process.env.REDIS_CONNECTION,
-  REDIS_EVENT_LIST_KEY: process.env.REDIS_EVENT_LIST_KEY || 'events',
-  MAX_CACHED_EVENTS: process.env.MAX_CACHED_EVENTS || 10
+  // bus API config params
+  BUSAPI_URL: process.env.BUSAPI_URL || 'https://api.topcoder-dev.com/v5',
+  KAFKA_ERROR_TOPIC: process.env.KAFKA_ERROR_TOPIC || 'common.error.reporting'
+
 }

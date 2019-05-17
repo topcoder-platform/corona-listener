@@ -2,5 +2,8 @@
   "topic": "challenge.notification.events",
   "challengeName": "test name",
   "challengeType": "test type",
-  "challengePrizes": [10]
+  "challengePrizes": [10],
+  "type": "ACTIVATE_CHALLENGE",
+  "projectId": 123,
+  "challengeId": 30049360
 }

@@ -5,5 +5,9 @@
   "challengePrizes": [
     350,
     150
-  ]
+  ],
+  "phaseState": "END",
+  "phaseTypeName": "Submission",
+  "projectId": 7572,
+  "challengeId": 30049360
 }

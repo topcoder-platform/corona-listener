@@ -2,5 +2,8 @@
   "topic": "challenge.notification.events",
   "challengeName": "Code Dev-Env Test",
   "challengeType": "Code",
-  "challengePrizes": [ 350, 150 ]
+  "challengePrizes": [ 350, 150 ],
+  "type": "ACTIVATE_CHALLENGE",
+  "projectId": 7572,
+  "challengeId": 30049360
 }

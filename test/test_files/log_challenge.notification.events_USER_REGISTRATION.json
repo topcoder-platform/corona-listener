@@ -8,5 +8,10 @@
   ],
   "firstName": "F_NAME",
   "lastName": "L_NAME",
-  "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg"
+  "photoURL": "https://www.topcoder.com/i/m/callmekatootie.jpeg",
+  "location": "IND",
+  "handle": "callmekatootie",
+  "type": "USER_REGISTRATION",
+  "projectId": 7572,
+  "challengeId": 30049360
 }

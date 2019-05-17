@@ -19,8 +19,7 @@ const {
   uninstallMoxios
 } = require('./testHelper')
 
-describe('Kafka Consumer Tests', () => {
-  let consumer
+describe('Kafka Handler Tests', () => {
   let service
   let emitStub
   beforeEach(() => {
@@ -42,22 +41,9 @@ describe('Kafka Consumer Tests', () => {
     service = proxyquire('../src/services/KafkaHandlerService', {
       '../common/helper': helper
     })
-    const app = proxyquire('../src/app', {
-      './common/helper': helper,
-      './services/KafkaHandlerService': service
-    })
-    consumer = app.kafkaConsumer
-    emitStub = sinon.stub(helper, 'cacheEvent')
+    emitStub = sinon.stub(helper, 'postEvent')
     // wait for app setup
     await wait()
-  })
-
-  after(async () => {
-    try {
-      await consumer.end()
-    } catch (e) {
-      // ignore error here
-    }
   })
 
   it('KafkaHandlerService - null message', async () => {

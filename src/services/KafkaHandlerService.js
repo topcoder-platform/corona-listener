@@ -56,7 +56,7 @@ async function processUserRegistration (message) {
     projectId,
     challengeId
   }
-  await helper.cacheEvent(event)
+  await helper.postEvent(event)
   return true
 }
 
@@ -110,7 +110,7 @@ async function processAddResource (message) {
     projectId,
     challengeId
   }
-  await helper.cacheEvent(event)
+  await helper.postEvent(event)
   return true
 }
 
@@ -154,7 +154,7 @@ async function processUpdateDraftOrActivateChallenge (message) {
     projectId,
     challengeId
   }
-  await helper.cacheEvent(event)
+  await helper.postEvent(event)
   return true
 }
 
@@ -208,7 +208,7 @@ async function processCloseTask (message) {
     projectId,
     challengeId
   }
-  await helper.cacheEvent(event)
+  await helper.postEvent(event)
   return true
 }
 
@@ -267,7 +267,7 @@ async function processContestSubmission (message) {
     projectId,
     challengeId
   }
-  await helper.cacheEvent(event)
+  await helper.postEvent(event)
   return true
 }
 
@@ -304,7 +304,7 @@ async function processAutoPilotEvent (message) {
     projectId,
     challengeId
   }
-  await helper.cacheEvent(event)
+  await helper.postEvent(event)
   return true
 }
 

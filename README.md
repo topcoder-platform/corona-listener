@@ -4,7 +4,6 @@
 
 - [nodejs](https://nodejs.org/en/) (v10)
 - Kafka (v2)
-- Redis (v5)
 
 ## Configuration
 
@@ -22,33 +21,23 @@ The following parameters can be set in config files or in env variables:
     if not provided, then SSL connection is not used, direct insecure connection is used;
     if provided, it can be either path to private key file or private key content
 - TOPICS: Kafka topics to listen to
+- CORONA_TOPIC: corona topic to send event result to
 - AUTH0_URL: Auth0 URL, used to get TC M2M token
 - AUTH0_AUDIENCE: Auth0 audience, used to get TC M2M token
-- TOKEN_CACHE_TIME: token cache time, used to get TC M2M token
+- AUTH0_PROXY_SERVER_URL: Auth0 proxy server url, used to get TC M2M token
 - AUTH0_CLIENT_ID: Auth0 client id, used to get TC M2M token
 - AUTH0_CLIENT_SECRET: Auth0 client secret, used to get TC M2M token
 - GET_CHALLENGE_DETAILS_URL: URL to get challenge details
 - GET_USER_DETAILS_URL: URL to get user details
 - GET_USER_DETAILS_BY_HANDLE_URL: URL to get user details by handle
-- REDIS_CONNECTION: Redis connection
-- REDIS_EVENT_LIST_KEY: Redis event list key
-- MAX_CACHED_EVENTS: max count of events to cache
-
+- BUSAPI_URL: Bus API URL
+- KAFKA_ERROR_TOPIC: Kafka error topic used by bus API wrapper
 
 Test config is at `test/testConfig.js`, you don't need to change it.
 The following test parameters can be set in test config files or in env variables:
 
 - WAIT_MS: the time in milliseconds to wait for some processing completion
 - USE_MOCK: flag to use mock requests in tests to avoid server issues with real apis and make tests to run faster
-
-Set the following environment variables so that the app can get TC M2M token (use 'set' instead of 'export' for Windows OS):
-
-```bash
-export AUTH0_CLIENT_ID=8QovDh27SrDu1XSs68m21A1NBP8isvOt
-export AUTH0_CLIENT_SECRET=3QVxxu20QnagdH-McWhVz0WfsQzA1F8taDdGDI4XphgpEYZPcMTF4lX3aeOIeCzh
-export AUTH0_URL=https://topcoder-dev.auth0.com/oauth/token
-export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
-```
 
 ## Local Kafka setup
 
@@ -72,30 +61,15 @@ export AUTH0_AUDIENCE=https://m2m.topcoder-dev.com/
   `bin/kafka-topics.sh --list --zookeeper localhost:2181`,
   it should list out the created topics
 
-
-## Redis setup
-
-- below are verified in Mac
-- download Redis from `http://download.redis.io/releases/redis-5.0.3.tar.gz`
-- extract out the content
-- go to extracted folder
-- run `make`
-- go to `src` folder
-- run `./redis-server` to start Redis server
-- in the `src` folder, you may run `./redis-cli` to start a Redis client to interact with the server
-
-
 ## Local deployment
 
 - setup Kafka as above
-- setup Redis as above
 - install dependencies `npm i`
 - run code lint check `npm run lint`
 - run code lint fix `npm run lint:fix`
 - run tests `npm run test`
 - run tests with coverage `npm run cov` and you can check coverage report in `coverage` folder
 - start app `npm start`, it starts Kafka consumer to listen to configured topics
-
 
 ## Heroku Deployment
 
@@ -108,11 +82,9 @@ You may no need to run `git init` if already git repo.
 - heroku config:set KAFKA_URL=... TOPICS=topic1,topic2
 - git push heroku HEAD:master
 
-
 ## Verification
 
 - setup Kafka as above
-- setup Redis as above
 - see above for details to run tests
 - start app
 - to do manual verification for Kafka consumer, go to the Kafka folder
@@ -195,16 +167,7 @@ info: It is contest submission message.
 info: It is auto pilot event message.
 ```
 
-- in the Redis client, you may run command like `LRANGE events 0 9` to view the cached events,
-  this command returns the cached oldest 10 events, note that latest event is stored at the end of list,
-  the events in Redis is like:
-
-```
-127.0.0.1:6379> LRANGE events 0 9
-1) "{\"topic\":\"challenge.notification.events\",\"challengeName\":\"Code Dev-Env Test\",\"challengeType\":\"Code\",\"challengePrizes\":[350,150],\"firstName\":\"F_NAME\",\"lastName\":\"L_NAME\",\"photoURL\":\"https://www.topcoder.com/i/m/callmekatootie.jpeg\",\"createdAt\":\"2018-02-15T16:00:00.000Z\"}"
-2) "{\"topic\":\"challenge.notification.events\",\"challengeName\":\"Code Dev-Env Test\",\"challengeType\":\"Code\",\"challengePrizes\":[350,150],\"firstName\":\"F_NAME\",\"lastName\":\"L_NAME\",\"photoURL\":\"https://www.topcoder.com/i/m/callmekatootie.jpeg\",\"createdAt\":\"2018-02-15T16:00:00.000Z\"}"
-```
-
+- go to [Lauscher](https://lauscher.topcoder-dev.com), provide your user name and password will be `appirio123`, choose `corona.saturate.create` topic and view the events result.
 
 ## Notes
 

@@ -4,11 +4,14 @@
 const _ = require('lodash')
 const config = require('config')
 const m2mAuth = require('tc-core-library-js').auth.m2m
-const m2m = m2mAuth(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'TOKEN_CACHE_TIME']))
+const m2m = m2mAuth(_.pick(config, ['AUTH0_URL', 'AUTH0_AUDIENCE', 'AUTH0_PROXY_SERVER_URL']))
 const axios = require('axios')
-const Redis = require('ioredis')
+const busApi = require('tc-bus-api-wrapper')
+const constants = require('./constants')
 
-const redis = new Redis(config.REDIS_CONNECTION)
+const busApiClient = busApi(_.pick(config,
+  ['AUTH0_URL', 'AUTH0_AUDIENCE', 'AUTH0_PROXY_SERVER_URL', 'AUTH0_CLIENT_ID', 'AUTH0_CLIENT_SECRET',
+    'BUSAPI_URL', 'KAFKA_ERROR_TOPIC']))
 
 /**
  * Function to get M2M token
@@ -78,16 +81,17 @@ async function getUserDetailsByHandle (handle) {
 }
 
 /**
- * Cache event in Redis.
- * @param {Object} event the event to cache
+ * Post event to Kafka.
+ * @param {Object} event the event to post
  */
-async function cacheEvent (event) {
-  const s = JSON.stringify(event)
-  const result = await redis.rpush(config.REDIS_EVENT_LIST_KEY, s)
-  if (result > Number(config.MAX_CACHED_EVENTS)) {
-    // more than max count, remove the oldest one
-    await redis.lpop(config.REDIS_EVENT_LIST_KEY)
-  }
+async function postEvent (event) {
+  await busApiClient.postEvent({
+    topic: config.CORONA_TOPIC,
+    originator: constants.EVENT_ORIGINATOR,
+    timestamp: new Date().toISOString(),
+    'mime-type': constants.EVENT_MIME_TYPE,
+    payload: event
+  })
 }
 
 module.exports = {
@@ -95,5 +99,5 @@ module.exports = {
   getChallengeDetails,
   getUserDetails,
   getUserDetailsByHandle,
-  cacheEvent
+  postEvent
 }
