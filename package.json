@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "bluebird": "^3.5.1",
+    "bluebird": "^3.7.2",
     "config": "^1.21.0",
     "get-parameter-names": "^0.3.0",
     "joi": "^9.0.4",
