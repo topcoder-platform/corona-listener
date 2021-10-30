@@ -27,7 +27,7 @@
     "config": "^1.21.0",
     "get-parameter-names": "^0.3.0",
     "joi": "^9.0.4",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.21",
     "no-kafka": "^3.2.4",
     "tc-bus-api-wrapper": "topcoder-platform/tc-bus-api-wrapper.git",
     "tc-core-library-js": "appirio-tech/tc-core-library-js.git#v2.6",
